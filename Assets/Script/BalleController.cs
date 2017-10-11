@@ -50,21 +50,36 @@ public class BalleController : MonoBehaviour {
 	}
 
     void OnCollisionEnter(Collision col){
-        if (col.collider.gameObject.CompareTag("murNord")) {
-            choc(speed, Direction.x, -Direction.z);
-        }
-        if (col.collider.gameObject.CompareTag("murSud"))
+        string colliderTag = col.collider.gameObject.tag;
+        if (colliderTag.Equals("Player") || colliderTag.Equals("murNord") || colliderTag.Equals("murSud") || colliderTag.Equals("murOuest") || colliderTag.Equals("murEst"))
         {
-            choc(speed, Direction.x, -Direction.z);
+            ContactPoint contact = col.contacts[0];
+            float angle = Vector3.Angle(contact.normal, Vector3.forward);
+
+            if (Mathf.Approximately(angle, 0)){// top
+                choc(speed, Direction.x, -Direction.z);
+                //Debug.Log("[BallController] - ball is at top of object");
+            }
+            if (Mathf.Approximately(angle, 180)){// bottom
+                choc(speed, Direction.x, -Direction.z);
+                //Debug.Log("[BallController] - ball is at bot of object");
+            }
+            if (Mathf.Approximately(angle, 90))
+            {
+                Vector3 cross = Vector3.Cross(Vector3.forward, contact.normal);
+                if (cross.y > 0){// Right
+                    choc(speed, -Direction.x, Direction.z);
+                    //Debug.Log("[BallController] - ball is at right of object");
+                } 
+                else{// left
+                    choc(speed, -Direction.x, Direction.z);
+                    //Debug.Log("[BallController] - ball is at left of object");
+                }
+            }
+
+
         }
-        if (col.collider.gameObject.CompareTag("murOuest"))
-        {
-            choc(speed, -Direction.x, Direction.z);
-        }
-        if (col.collider.gameObject.CompareTag("murEst"))
-        {
-            choc(speed, -Direction.x, Direction.z);
-        }
+        
     }
 
     private void choc(float force, float xDirection, float yDirection) {
