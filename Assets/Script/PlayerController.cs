@@ -6,10 +6,10 @@ using UnityEngine;
 public class PlayerController : MonoBehaviour {
 
     //four point define a play zone which the player can move freely inside
-    public float playZoneXBegin;
-    public float playZoneXEnd;
-    public float playZoneZBegin;
-    public float playZoneZEnd;
+    public double playZoneXBegin;
+    public double playZoneXEnd;
+    public double playZoneZBegin;
+    public double playZoneZEnd;
     public GameObject player;
 
     //ArToolKit functions
@@ -31,7 +31,10 @@ public class PlayerController : MonoBehaviour {
 
     // Use this for initialization
     void Start () {
-
+        playZoneXBegin = playZoneXBegin + 0.5 * transform.localScale.x;
+        playZoneXEnd = playZoneXEnd - 0.5 * transform.localScale.x;
+        playZoneZBegin = playZoneZBegin + 0.5 * transform.localScale.z;
+        playZoneZEnd = playZoneZEnd - 0.5 * transform.localScale.z;
     }
 
     // Update is called once per frame

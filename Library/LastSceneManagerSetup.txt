@@ -3,5 +3,8 @@ sceneSetups:
   isLoaded: 0
   isActive: 0
 - path: Assets/Scene/ColorTracking.unity
+  isLoaded: 0
+  isActive: 0
+- path: Assets/Scene/CustomTrack.unity
   isLoaded: 1
   isActive: 1
