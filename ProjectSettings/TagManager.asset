@@ -16,6 +16,8 @@ TagManager:
   - murOuest
   - murEst
   - table
+  - webcamSimulationCamera
+  - backgroundCamera
   layers:
   - Default
   - TransparentFX

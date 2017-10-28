@@ -4,6 +4,7 @@ using UnityEngine;
 
 public class BalleController : MonoBehaviour {
 
+    public bool pushTheBallOnStart;
     private float speed;
     private Vector3 direction;
     private Rigidbody rb;
@@ -37,10 +38,15 @@ public class BalleController : MonoBehaviour {
 
     // Use this for initialization
     void Start () {
-        speed = 500f;
-        Direction = new Vector3(1f,0.0f,0.8f);
         rb = GetComponent<Rigidbody>();
-        rb.AddForce(speed * direction);
+
+        speed = 500f;
+        Direction = new Vector3(1f, 0.0f, 0.8f);
+
+        if (pushTheBallOnStart) {
+            rb.AddForce(speed * direction);
+        }
+        
     }
 	
 	// Update is called once per frame
@@ -76,10 +82,7 @@ public class BalleController : MonoBehaviour {
                     //Debug.Log("[BallController] - ball is at left of object");
                 }
             }
-
-
-        }
-        
+        } 
     }
 
     private void choc(float force, float xDirection, float yDirection) {

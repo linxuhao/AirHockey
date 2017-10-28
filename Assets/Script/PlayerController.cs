@@ -10,24 +10,6 @@ public class PlayerController : MonoBehaviour {
     public double playZoneXEnd;
     public double playZoneZBegin;
     public double playZoneZEnd;
-    public GameObject player;
-
-    //ArToolKit functions
-    void OnMarkerFound(ARMarker marker)
-    {
-        Debug.Log("[PlayerController] - MARKER FOUND! YEAHH! --------------------------------------------------------------------------------");
-    }
-
-    void OnMarkerLost(ARMarker marker)
-    {
-        Debug.Log("[PlayerController] - MARKER LOST! FKKKKKK! --------------------------------------------------------------------------------");
-    }
-
-    void OnMarkerTracked(ARMarker marker)
-    {
-        //player.transform.position = marker.
-        Debug.Log("[PlayerController] - MARKER TRACKED! WHEEEE! --------------------------------------------------------------------------------");
-    }
 
     // Use this for initialization
     void Start () {

@@ -37,7 +37,7 @@ Transform:
   m_PrefabInternal: {fileID: 100100000}
   m_GameObject: {fileID: 1051407574672054}
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 5, y: 0.1, z: 0}
+  m_LocalPosition: {x: 5.230228, y: 0.05, z: -18}
   m_LocalScale: {x: 1, y: 0.1, z: 1}
   m_Children: []
   m_Father: {fileID: 0}
@@ -109,6 +109,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   playZoneXBegin: 0
   playZoneXEnd: 10
-  playZoneZBegin: -5
-  playZoneZEnd: 5
+  playZoneZBegin: -13
+  playZoneZEnd: -23
   player: {fileID: 1051407574672054}
