@@ -9,6 +9,8 @@ public class webCamStreamIn : MonoBehaviour {
         cameraSimulation,
         webcam
     }
+    [Header("Video Input Mode selection")]
+    [Tooltip("Select video input mode from webcam or a ingame camera simulate webcam")]
     public inputMode videoInputMode;
 
     //to display content of webcam on a material
@@ -37,28 +39,34 @@ public class webCamStreamIn : MonoBehaviour {
     private Texture2D processedWebcamView;
 
     //image processing attributs
-    //color tolerance
-    /// <summary>
     /// ////////////////////////////////////////////// Public variables //////////////////////////////////////
-    /// </summary>
+    [Header("Image Processing Attributes")]
+
+    [Tooltip("level from 0(not filtering at all) to 6(filter all)")]
+    public int noiseFilteringLevel;
+    [Tooltip("is difference between two grayscaled colors in %")]
     public float grayscaletolerance;
+    [Tooltip("webcam Resolution Width")]
     public int webcamResolutionWidth;
+    [Tooltip("webcam Resolution Height")]
     public int webcamResolutionHeight;
+
+    private Color colorTrackingMark = Color.green;
+    
     //hashset because it's add and contain's complexity is o(1) and ignore duplicated elements
     private HashSet<Color> backgroundColors;
-    //both in seconds
+    //in seconds, -0.01f to begin the refresh on the first frame
     private float nextRefreshTime = -0.01f;
-    private float refreshFrequency = 1.0f;
-   
-    // Rate of frame per image process, lower is more accurate but cost in performance.
-    /// <summary>
-    /// ////////////////////////////// Public variables
-    /// </summary>
+    //in seconds
+    private float backgroundColorRefreshFrequency = 1.0f;
+    
+    ////////////////////////////// Public variables
+    
+    [Tooltip("Rate of frame per image process, lower is more accurate but cost in performance. from 1 to infinite....")]
     public int imageProcessRate;
     private int imageProcessCycle;
 
     //grayscale debug loging attributs
-
     private int count = 0;
     private int max = 1000;
 
@@ -96,12 +104,14 @@ public class webCamStreamIn : MonoBehaviour {
         //create a new 2d texture to display processed web cam view
         processedWebcamView = new Texture2D(webCamWidth, webCamHeight);
 
-
         //display webcam content in this object's material, the content are processed per frame in update methode.
         //rend.material.mainTexture = webcam;
         rend.material.mainTexture = processedWebcamView;
 
         initializeBackgroundCamera();
+        //set background renderer main texture to cam2d
+        GameObject backgroundRenderer = GameObject.FindGameObjectWithTag("backgroundRenderer");
+        backgroundRenderer.GetComponent<Renderer>().material.mainTexture = cam2d;
 
         Debug.Log("cam width : " + camWidth);
         Debug.Log("cam height : " + camHeight);
@@ -173,43 +183,73 @@ public class webCamStreamIn : MonoBehaviour {
             //get webcam pixel array
             webcamFrame = getWebcamPixels();
 
-            //get in game main camera pixel array
+            //get in game background camera pixel array
             RenderTexture.active = camTexture;
             cam2d.ReadPixels(new Rect(0, 0, camWidth, camHeight), 0, 0);
             cam2d.Apply();
             camFrame = cam2d.GetPixels();
 
             if (Time.time > nextRefreshTime) {
-                nextRefreshTime += refreshFrequency;
+                nextRefreshTime += backgroundColorRefreshFrequency;
                 //process on camera background colors
                 backgroundColors = getBackgroundColors();
                 //Debug.Log("there are " + backgroundColors.Count + " differents backgroundColors");  
             }
 
-            if (imageProcessCycle >= imageProcessRate)
-            {
+            if (imageProcessCycle >= imageProcessRate){
                 imageProcessCycle = 1;
                 //process on webcam frame
-                for (int i = 0; i < webcamFrame.Length; i++)
-                {
+                //create a empty temp array
+                Color[] tempArray = new Color[webCamWidth*webCamHeight];
+                for (int i = 0; i < webcamFrame.Length; i++) {
                     //if is not a background and is a border
-                    if (!backgroundColors.Contains(webcamFrame[i]) && isBorder(webcamFrame, webCamWidth, webCamHeight, i))
-                    {
-                        //mark this pixel to red
-                        webcamFrame[i] = Color.red;
+                    if (!backgroundColors.Contains(webcamFrame[i])&& isBorder(webcamFrame, webCamWidth, i)){
+                        if (hasBorderAround(tempArray, webCamWidth, i)){
+                            //mark this pixel to red in display array
+                            webcamFrame[i] = colorTrackingMark;
+                            fireRayCast(webCamWidth, webCamHeight, i);
+                        }
+                        else {
+                            //mark this pixel to red in temp array, potential border and noise pixel
+                            tempArray[i] = colorTrackingMark;
+                        }
                     }
                 }
             }
             else {
                 imageProcessCycle++;
             }
-
+            cam2d.SetPixels(camFrame);
+            cam2d.Apply();
             processedWebcamView.SetPixels(webcamFrame);
             processedWebcamView.Apply();
         }
         else {
             Debug.LogError("there is no active main  background camera in game, check if your camera is tagged as backgroundCamera");
         }
+    }
+
+    //shots raycast from background camera to background(ball in background, foreground are the real objects)
+    private void fireRayCast(int webCamWidth, int webCamHeight, int i){
+        //percentage
+        int webcamScreenLigne = i / webCamWidth;
+        float xWebcamScreenPercentage = (float)i % webCamWidth / webCamWidth;
+        int newI = (int)(webcamScreenLigne * webCamWidth + xWebcamScreenPercentage * camWidth);
+        float yWebcamScreenPercentage = (float)webcamScreenLigne / webCamHeight;
+        int pixelDisplayPosition = (int)((int)(yWebcamScreenPercentage * camHeight) * camWidth + xWebcamScreenPercentage * camWidth);
+
+        camFrame[pixelDisplayPosition] = colorTrackingMark;
+
+        //fire the rayCast with the calculated positions
+        float cameraY = cam.transform.position.y;
+        //image pixel left top corner (0,0) and right bot corner (max,max), it's Y axis is inversed compared to viewport axes : bot left corner (0,0), so 1-yPercentage
+        Vector3 viewportPositionBegin = new Vector3(xWebcamScreenPercentage, cameraY, 1 - yWebcamScreenPercentage);
+        Vector3 viewportPositionEnd = new Vector3(xWebcamScreenPercentage, -1, 1 - yWebcamScreenPercentage);
+        Vector3 worldPositionBegin = Camera.main.ViewportToWorldPoint(viewportPositionBegin);
+        Vector3 worldPositionEnd = Camera.main.ViewportToWorldPoint(viewportPositionEnd);
+        Ray ray = new Ray(worldPositionBegin, worldPositionEnd);
+        Physics.Raycast(ray);
+        Debug.DrawRay(worldPositionBegin, worldPositionEnd, Color.red);
     }
 
     private Color[] getWebcamPixels(){
@@ -251,7 +291,7 @@ public class webCamStreamIn : MonoBehaviour {
         return result > tolerence;
     }
 
-    private bool isBorder(Color[] pixelArray, int imageWidth, int imageHeight, int pixelPosition) {
+    private bool isBorder(Color[] pixelArray, int imageWidth, int pixelPosition) {
         bool result = true;
         //check top and bottom
         for (int i = pixelPosition - imageWidth; i <= pixelPosition + imageWidth; i += imageWidth) {
@@ -261,6 +301,25 @@ public class webCamStreamIn : MonoBehaviour {
                 if (j>0 && j < pixelArray.Length && j != pixelPosition && !hasBigGrayscaleDifference(pixelArray[j],pixelArray[pixelPosition], grayscaletolerance)) {
                     // does not have Big Grayscale Difference with nearby pixles means is not a a border
                     return false;
+                }
+            }
+        }
+        return result;
+    }
+
+    private bool hasBorderAround(Color[] pixelArray, int imageWidth, int pixelPosition){
+        bool result = false;
+        int count = 0;
+        //check top and bottom
+        for (int i = pixelPosition - imageWidth; i <= pixelPosition + imageWidth; i += imageWidth){
+            //check left and right
+            for (int j = i - 1; j <= i + 1; j++){
+                //begins with j = pixelPosition - imageWidth -1 ends a*on pixelPosition + imageWidth + 1, 9 possible values, the center is self
+                if (j > 0 && j < pixelArray.Length && j != pixelPosition && pixelArray[j] == colorTrackingMark){
+                    count++;
+                    if (count > noiseFilteringLevel) {
+                        return true;
+                    }     
                 }
             }
         }

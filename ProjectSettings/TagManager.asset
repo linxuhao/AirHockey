@@ -18,6 +18,7 @@ TagManager:
   - table
   - webcamSimulationCamera
   - backgroundCamera
+  - backgroundRenderer
   layers:
   - Default
   - TransparentFX
