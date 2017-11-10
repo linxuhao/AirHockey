@@ -13,6 +13,7 @@ public class webCamStreamIn : MonoBehaviour {
     [Tooltip("Select video input mode from webcam or a ingame camera simulate webcam")]
     public inputMode videoInputMode;
 
+
     //to display content of webcam on a material
     private Renderer rend;
 
@@ -59,20 +60,25 @@ public class webCamStreamIn : MonoBehaviour {
     private float nextRefreshTime = -0.01f;
     //in seconds
     private float backgroundColorRefreshFrequency = 1.0f;
-    
-    ////////////////////////////// Public variables
-    
+
+    ////////////////////////////// Public variables  //////////////////////////////
+
     [Tooltip("Rate of frame per image process, lower is more accurate but cost in performance. from 1 to infinite....")]
     public int imageProcessRate;
     private int imageProcessCycle;
+
+    //raycasting attributs
+    float xBegin;
+    float xEnd;
+    float zBegin;
+    float zEnd;
 
     //grayscale debug loging attributs
     private int count = 0;
     private int max = 1000;
 
     // Use this for initialization
-    void Start ()
-    {
+    void Start (){
         if (imageProcessRate <= 0){
             Debug.LogError("Please specify imageProcessRate, it is Rate of frame per image process, lower is more accurate but cost in performance.");
         }
@@ -117,11 +123,30 @@ public class webCamStreamIn : MonoBehaviour {
         Debug.Log("cam height : " + camHeight);
         //initialize the first frame to process state
         imageProcessCycle = imageProcessRate;
+
+        //initialize raycasting zone
+        initializeRaycastingZone();
     }
 
+    private void initializeRaycastingZone() {
+        GameObject murs = GameObject.FindGameObjectsWithTag("backgroundMurs")[0];
+        
+        for (int i = 0; i < murs.transform.childCount; i++) {
+            Transform child = murs.transform.GetChild(i);
+            if (child.CompareTag("murOuest")) {
+                xBegin = child.position.x;
+            } else if (child.CompareTag("murEst")){
+                xEnd = child.position.x;
+            }else if (child.CompareTag("murSud")){
+                zBegin = child.position.z;
+            }else if (child.CompareTag("murNord")){
+                zEnd = child.position.z;
+            }
 
-    private void initializeBackgroundCamera()
-    {
+        }
+    }
+
+    private void initializeBackgroundCamera(){
         //get the background camera
         cam = GameObject.FindGameObjectWithTag("backgroundCamera").GetComponent<Camera>();
         camTexture = cam.targetTexture;
@@ -133,8 +158,7 @@ public class webCamStreamIn : MonoBehaviour {
         camFrame = new Color[camHeight * camWidth];
     }
 
-    private void initializeWebcamSimulationCamera()
-    {
+    private void initializeWebcamSimulationCamera(){
         //get the webcam simulation camera
         webcamSimuCam = GameObject.FindGameObjectWithTag("webcamSimulationCamera").GetComponent<Camera>();
         //create the texture as the camera target
@@ -231,6 +255,7 @@ public class webCamStreamIn : MonoBehaviour {
 
     //shots raycast from background camera to background(ball in background, foreground are the real objects)
     private void fireRayCast(int webCamWidth, int webCamHeight, int i){
+        //calculate each ray's position
         //percentage
         int webcamScreenLigne = i / webCamWidth;
         float xWebcamScreenPercentage = (float)i % webCamWidth / webCamWidth;
@@ -242,14 +267,48 @@ public class webCamStreamIn : MonoBehaviour {
 
         //fire the rayCast with the calculated positions
         float cameraY = cam.transform.position.y;
-        //image pixel left top corner (0,0) and right bot corner (max,max), it's Y axis is inversed compared to viewport axes : bot left corner (0,0), so 1-yPercentage
-        Vector3 viewportPositionBegin = new Vector3(xWebcamScreenPercentage, cameraY, 1 - yWebcamScreenPercentage);
-        Vector3 viewportPositionEnd = new Vector3(xWebcamScreenPercentage, -1, 1 - yWebcamScreenPercentage);
-        Vector3 worldPositionBegin = Camera.main.ViewportToWorldPoint(viewportPositionBegin);
-        Vector3 worldPositionEnd = Camera.main.ViewportToWorldPoint(viewportPositionEnd);
+      // y in camera axis is z in world axis
+        Vector3 cameraPositionBegin = new Vector3(xWebcamScreenPercentage,0,yWebcamScreenPercentage);
+        Vector3 worldPositionBegin = CameraPercentPositionToWorldPoint(cameraPositionBegin);
+        Vector3 worldPositionEnd = new Vector3(worldPositionBegin.x, cameraY, worldPositionBegin.z);
+
         Ray ray = new Ray(worldPositionBegin, worldPositionEnd);
-        Physics.Raycast(ray);
-        Debug.DrawRay(worldPositionBegin, worldPositionEnd, Color.red);
+        RaycastHit hit;
+        if (Physics.Raycast(ray, out hit))
+        {
+            if (hit.collider.gameObject.CompareTag("ball"))
+            {
+                makeObjectMove(hit);
+            }
+        }
+        Debug.DrawRay(ray.origin, ray.direction, Color.red);
+    }
+
+    private void makeObjectMove(RaycastHit hit){
+        BalleController ball = hit.collider.gameObject.GetComponent<BalleController>();
+        //if no controller on object, do nothing
+        if (!ball) {
+            return;
+        }
+
+        Vector3 impactVector = (hit.transform.position - hit.point);
+        if (impactVector.x > 0)
+        {
+            ball.choc(10f, impactVector.x, impactVector.z);
+        }
+        else {
+            ball.choc(10f, impactVector.x, impactVector.z);
+        }
+        
+    }
+
+    private Vector3 CameraPercentPositionToWorldPoint(Vector3 cameraPosition) {
+        Vector3 result = cameraPosition;
+        float availableXScale = xEnd - xBegin;
+        float availableZScale = zEnd - zBegin;
+        result.x = cameraPosition.x * availableXScale + xBegin;
+        result.z = cameraPosition.z * availableZScale + zBegin;
+        return result;
     }
 
     private Color[] getWebcamPixels(){

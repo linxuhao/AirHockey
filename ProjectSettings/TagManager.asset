@@ -10,7 +10,6 @@ TagManager:
   - Target
   - MegaHit
   - Controller
-  - Undefined
   - murNord
   - murSud
   - murOuest
@@ -19,6 +18,9 @@ TagManager:
   - webcamSimulationCamera
   - backgroundCamera
   - backgroundRenderer
+  - background
+  - backgroundMurs
+  - ball
   layers:
   - Default
   - TransparentFX

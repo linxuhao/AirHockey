@@ -8,6 +8,7 @@ public class BalleController : MonoBehaviour {
     private float speed;
     private Vector3 direction;
     private Rigidbody rb;
+    private bool canBeTouched;
 
     public float Speed
     {
@@ -39,21 +40,21 @@ public class BalleController : MonoBehaviour {
     // Use this for initialization
     void Start () {
         rb = GetComponent<Rigidbody>();
-
-        speed = 500f;
+        canBeTouched = true;
+        speed = 10f;
         Direction = new Vector3(1f, 0.0f, 0.8f);
 
         if (pushTheBallOnStart) {
-            rb.AddForce(speed * direction);
+            rb.AddForce(speed * direction, ForceMode.Impulse);
         }
         
     }
-	
-	// Update is called once per frame
-	void LateUpdate () {
-        
-		
-	}
+
+    void Update(){
+        if (!canBeTouched) {
+            canBeTouched = true;
+        }
+    }
 
     void OnCollisionEnter(Collision col){
         string colliderTag = col.collider.gameObject.tag;
@@ -85,8 +86,12 @@ public class BalleController : MonoBehaviour {
         } 
     }
 
-    private void choc(float force, float xDirection, float yDirection) {
-        Direction = new Vector3(xDirection, 0.0f, yDirection);
-        rb.AddForce(force * direction);
+    public void choc(float force, float xDirection, float yDirection) {
+        if (canBeTouched) {
+            Direction = new Vector3(xDirection, 0.0f, yDirection);
+            rb.AddForce(force * direction, ForceMode.Impulse);
+            canBeTouched = false;
+        }
+        
     }
 }
