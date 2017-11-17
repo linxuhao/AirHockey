@@ -5,14 +5,13 @@ using UnityEngine;
 
 
 public class webCamStreamIn : MonoBehaviour {
-    public enum inputMode {
-        cameraSimulation,
-        webcam
+    public enum outputMode {
+        debug,
+        game
     }
-    [Header("Video Input Mode selection")]
-    [Tooltip("Select video input mode from webcam or a ingame camera simulate webcam")]
-    public inputMode videoInputMode;
-
+    [Header("Camera input options")]
+    [Tooltip("Invert X and Y from webcam")]
+    public bool invertAxisXYFromCamera;
 
     //to display content of webcam on a material
     private Renderer rend;
@@ -22,11 +21,6 @@ public class webCamStreamIn : MonoBehaviour {
     private int webCamHeight;
     private int webCamWidth;
     private Color[] webcamFrame;
-
-    //webcam simulation camera
-    private Camera webcamSimuCam;
-    private RenderTexture webcamSimuCamTexture;
-    Texture2D webcamSimuCam2d;
 
     //camera
     private Camera cam;
@@ -54,8 +48,6 @@ public class webCamStreamIn : MonoBehaviour {
 
     private Color colorTrackingMark = Color.green;
     
-    //hashset because it's add and contain's complexity is o(1) and ignore duplicated elements
-    private HashSet<Color> backgroundColors;
     //in seconds, -0.01f to begin the refresh on the first frame
     private float nextRefreshTime = -0.01f;
     //in seconds
@@ -67,15 +59,26 @@ public class webCamStreamIn : MonoBehaviour {
     public int imageProcessRate;
     private int imageProcessCycle;
 
-    //raycasting attributs
+    //game zone attributs
     float xBegin;
     float xEnd;
     float zBegin;
     float zEnd;
 
-    //grayscale debug loging attributs
-    private int count = 0;
-    private int max = 1000;
+    //voxel attributs
+    [Header("Physic simulation")]
+    [Tooltip("Select voxel visibility mode, debug is visible, game is invisible")]
+    public outputMode VoxelOutputMode;
+
+    [Tooltip("Select a gameObject simulate voxel")]
+    public GameObject voxel;
+    private GameObject invisibleVoxel;
+    private GameObject currentUsingVoxel;
+    private List<GameObject> voxels;
+    //the pointer of voxels in each frame, to know which voxels we are currently working on
+    private int voxelPointer;
+    //calculate this once and use it, to gain some performances
+    private float voxelY;
 
     // Use this for initialization
     void Start (){
@@ -97,13 +100,7 @@ public class webCamStreamIn : MonoBehaviour {
 
         rend = GetComponent<Renderer>();
 
-        if (videoInputMode == inputMode.webcam){
-            initializeWebcam();
-        }
-        else
-        if (videoInputMode == inputMode.cameraSimulation){
-            initializeWebcamSimulationCamera();
-        }
+        initializeWebcam();
 
         webcamFrame = new Color[webCamHeight * webCamWidth];
 
@@ -124,18 +121,34 @@ public class webCamStreamIn : MonoBehaviour {
         //initialize the first frame to process state
         imageProcessCycle = imageProcessRate;
 
-        //initialize raycasting zone
-        initializeRaycastingZone();
+        //initialize Game zone
+        initializeGameZone();
+
+        //initialize voxel
+        voxels = new List<GameObject>();
+        voxelY = voxel.transform.localScale.y / 2;
+        invisibleVoxel = new GameObject("invisibleVoxel");
+        BoxCollider invisibleBox = invisibleVoxel.AddComponent<BoxCollider>() as BoxCollider;
+        invisibleVoxel.transform.localScale = voxel.transform.localScale;
+
+        if (VoxelOutputMode == outputMode.debug)
+        {
+            currentUsingVoxel = voxel;
+        }
+        else if (VoxelOutputMode == outputMode.game)
+        {
+            currentUsingVoxel = invisibleVoxel;
+        }
     }
 
-    private void initializeRaycastingZone() {
+    private void initializeGameZone() {
         GameObject murs = GameObject.FindGameObjectsWithTag("backgroundMurs")[0];
         
         for (int i = 0; i < murs.transform.childCount; i++) {
             Transform child = murs.transform.GetChild(i);
             if (child.CompareTag("murOuest")) {
                 xBegin = child.position.x;
-            } else if (child.CompareTag("murEst")){
+            }else if (child.CompareTag("murEst")){
                 xEnd = child.position.x;
             }else if (child.CompareTag("murSud")){
                 zBegin = child.position.z;
@@ -156,24 +169,6 @@ public class webCamStreamIn : MonoBehaviour {
         camWidth = camTexture.width;
         cam2d = new Texture2D(camWidth, camHeight, TextureFormat.RGBA32, true);
         camFrame = new Color[camHeight * camWidth];
-    }
-
-    private void initializeWebcamSimulationCamera(){
-        //get the webcam simulation camera
-        webcamSimuCam = GameObject.FindGameObjectWithTag("webcamSimulationCamera").GetComponent<Camera>();
-        //create the texture as the camera target
-        webcamSimuCamTexture = new RenderTexture(webcamResolutionWidth, webcamResolutionHeight, 0);
-        //set the camera target to the newly created texture
-        webcamSimuCam.targetTexture = webcamSimuCamTexture;
-
-        //create pixel array to save main camera (in game) frames
-        webCamHeight = webcamSimuCamTexture.height;
-        webCamWidth = webcamSimuCamTexture.width;
-        //create texture to get input pixels
-        webcamSimuCam2d = new Texture2D(webCamWidth, webCamHeight, TextureFormat.RGBA32, true);
-
-        Debug.Log("simulated webcam width : " + webCamWidth);
-        Debug.Log("simulated webcam height : " + webCamHeight);
     }
 
     private void initializeWebcam() {
@@ -202,6 +197,9 @@ public class webCamStreamIn : MonoBehaviour {
 
     // Update is called once per frame
     void Update () {
+        
+        //reset voxel pointer
+        voxelPointer = 0;
         //if in game main background camera does exist and be active
         if (cam != null && cam.isActiveAndEnabled) {
             //get webcam pixel array
@@ -216,7 +214,7 @@ public class webCamStreamIn : MonoBehaviour {
             if (Time.time > nextRefreshTime) {
                 nextRefreshTime += backgroundColorRefreshFrequency;
                 //process on camera background colors
-                backgroundColors = getBackgroundColors();
+                //backgroundColors = getBackgroundColors();
                 //Debug.Log("there are " + backgroundColors.Count + " differents backgroundColors");  
             }
 
@@ -227,11 +225,11 @@ public class webCamStreamIn : MonoBehaviour {
                 Color[] tempArray = new Color[webCamWidth*webCamHeight];
                 for (int i = 0; i < webcamFrame.Length; i++) {
                     //if is not a background and is a border
-                    if (!backgroundColors.Contains(webcamFrame[i])&& isBorder(webcamFrame, webCamWidth, i)){
+                    if (!isRedColor(webcamFrame[i])&& isBorder(webcamFrame, webCamWidth, i)){
                         if (hasBorderAround(tempArray, webCamWidth, i)){
                             //mark this pixel to red in display array
                             webcamFrame[i] = colorTrackingMark;
-                            fireRayCast(webCamWidth, webCamHeight, i);
+                            fireVoxel(webCamWidth, webCamHeight, i);
                         }
                         else {
                             //mark this pixel to red in temp array, potential border and noise pixel
@@ -247,14 +245,32 @@ public class webCamStreamIn : MonoBehaviour {
             cam2d.Apply();
             processedWebcamView.SetPixels(webcamFrame);
             processedWebcamView.Apply();
+
+            //Debug.Log("The number of voxel needed is : " + voxelPointer);
+            disableUnusedVoxels(voxelPointer);
         }
         else {
             Debug.LogError("there is no active main  background camera in game, check if your camera is tagged as backgroundCamera");
         }
     }
 
-    //shots raycast from background camera to background(ball in background, foreground are the real objects)
-    private void fireRayCast(int webCamWidth, int webCamHeight, int i){
+    private void disableUnusedVoxels(int voxelPointer){
+        for (int i = voxelPointer; i < voxels.Count; i++) {
+            voxels[i].SetActive(false);
+        }
+    }
+
+    private bool isRedColor(Color color){
+        bool result = false;
+        float maxGB = Mathf.Max(color.g, color.b);
+        if (color.r > maxGB && maxGB < 100) {
+            result = true;
+        }
+        return result;
+    }
+
+    //place voxels from background camera to background(ball in background, foreground are the real objects)
+    private void fireVoxel(int webCamWidth, int webCamHeight, int i){
         //calculate each ray's position
         //percentage
         int webcamScreenLigne = i / webCamWidth;
@@ -265,41 +281,33 @@ public class webCamStreamIn : MonoBehaviour {
 
         camFrame[pixelDisplayPosition] = colorTrackingMark;
 
-        //fire the rayCast with the calculated positions
+        //fire the voxels with the calculated positions
         float cameraY = cam.transform.position.y;
-      // y in camera axis is z in world axis
-        Vector3 cameraPositionBegin = new Vector3(xWebcamScreenPercentage,0,yWebcamScreenPercentage);
-        Vector3 worldPositionBegin = CameraPercentPositionToWorldPoint(cameraPositionBegin);
-        Vector3 worldPositionEnd = new Vector3(worldPositionBegin.x, cameraY, worldPositionBegin.z);
-
-        Ray ray = new Ray(worldPositionBegin, worldPositionEnd);
-        RaycastHit hit;
-        if (Physics.Raycast(ray, out hit))
-        {
-            if (hit.collider.gameObject.CompareTag("ball"))
-            {
-                makeObjectMove(hit);
-            }
+        // y in camera axis is z in world axis
+        float x = xWebcamScreenPercentage;
+        float y = yWebcamScreenPercentage;
+        if (invertAxisXYFromCamera) {
+            x = yWebcamScreenPercentage;
+            y = 1 - xWebcamScreenPercentage;
         }
-        Debug.DrawRay(ray.origin, ray.direction, Color.red);
+        Vector3 cameraPositionBegin = new Vector3(x, voxelY, y);
+        Vector3 worldPosition = CameraPercentPositionToWorldPoint(cameraPositionBegin);
+
+        placeOrInstantiateVoxel(worldPosition);
     }
 
-    private void makeObjectMove(RaycastHit hit){
-        BalleController ball = hit.collider.gameObject.GetComponent<BalleController>();
-        //if no controller on object, do nothing
-        if (!ball) {
-            return;
+    private void placeOrInstantiateVoxel(Vector3 worldPosition) {
+        //if have instantiated voxels, use them
+        if (voxels.Count > voxelPointer){
+            GameObject vox = voxels[voxelPointer];
+            vox.SetActive(true);
+            vox.transform.position = worldPosition;
         }
-
-        Vector3 impactVector = (hit.transform.position - hit.point);
-        if (impactVector.x > 0)
-        {
-            ball.choc(10f, impactVector.x, impactVector.z);
+        else {//if we need more voxels, instanciate them and save them
+            GameObject vox = Instantiate(currentUsingVoxel, worldPosition, Quaternion.identity);
+            voxels.Add(vox);
         }
-        else {
-            ball.choc(10f, impactVector.x, impactVector.z);
-        }
-        
+        voxelPointer++;
     }
 
     private Vector3 CameraPercentPositionToWorldPoint(Vector3 cameraPosition) {
@@ -313,16 +321,7 @@ public class webCamStreamIn : MonoBehaviour {
 
     private Color[] getWebcamPixels(){
         Color[] frames = null;
-        if (videoInputMode == inputMode.webcam) {
-            frames = webcam.GetPixels();
-        }else
-        if (videoInputMode == inputMode.cameraSimulation) {
-            RenderTexture.active = webcamSimuCamTexture;
-            //webcamSimuCam.Render();
-            webcamSimuCam2d.ReadPixels(new Rect(0, 0, webCamWidth, webCamHeight), 0, 0);
-            webcamSimuCam2d.Apply();
-            frames = webcamSimuCam2d.GetPixels();
-        }
+        frames = webcam.GetPixels();
         return frames;
     }
 
