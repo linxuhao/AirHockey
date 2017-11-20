@@ -36,11 +36,11 @@ public class ScoreController : MonoBehaviour {
 			//newball.transform.localScale = new Vector3(0.125f, 0.05f, 0.5f);
 			Debug.Log (newball.position);
 			if (this.gameObject.name == "Hole1") {
+				score[1]++;
+				score2.text = score [1].ToString ();
+			} else if (this.gameObject.name == "Hole2") {
 				score[0]++;
 				score1.text = score [0].ToString ();
-			} else if (this.gameObject.name == "Hole2") {
-				score[1]++;
-				score1.text = score [1].ToString ();
 			}
 		}
 	}
