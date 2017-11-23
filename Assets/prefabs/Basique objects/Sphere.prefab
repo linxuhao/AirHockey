@@ -112,6 +112,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   pushTheBallOnStart: 0
+  speed: 0
   direction: {x: 0, y: 0, z: 0}
 --- !u!135 &135731077973971004
 SphereCollider:

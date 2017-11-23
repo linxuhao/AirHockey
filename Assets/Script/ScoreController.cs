@@ -34,7 +34,7 @@ public class ScoreController : MonoBehaviour {
 			Rigidbody newball = Instantiate (sphere, position,  Quaternion.identity);
 			newball.gameObject.transform.parent = table.transform;
 			//newball.transform.localScale = new Vector3(0.125f, 0.05f, 0.5f);
-			Debug.Log (newball.position);
+			//Debug.Log (newball.position);
 			if (this.gameObject.name == "Hole1") {
 				score[1]++;
 				score2.text = score [1].ToString ();

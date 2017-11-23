@@ -6,7 +6,7 @@ using UnityEngine;
 public class BalleController : MonoBehaviour {
 
     public bool pushTheBallOnStart;
-    private float speed;
+    public float speed;
     public Vector3 direction;
     private Rigidbody rb;
 
