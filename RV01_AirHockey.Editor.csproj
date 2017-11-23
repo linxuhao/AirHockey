@@ -276,28 +276,11 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Assets\ARToolKit5-Unity\Scripts\Editor\ARCameraEditor.cs" />
-    <Compile Include="Assets\ARToolKit5-Unity\Scripts\Editor\ARControllerEditor.cs" />
-    <Compile Include="Assets\ARToolKit5-Unity\Scripts\Editor\ARMarkerEditor.cs" />
-    <Compile Include="Assets\ARToolKit5-Unity\Scripts\Editor\AROriginEditor.cs" />
-    <Compile Include="Assets\ARToolKit5-Unity\Scripts\Editor\ARToolKitMenuEditor.cs" />
-    <Compile Include="Assets\ARToolKit5-Unity\Scripts\Editor\ARToolKitPackager.cs" />
-    <Compile Include="Assets\ARToolKit5-Unity\Scripts\Editor\ARToolKitPostProcessor.cs" />
-    <Compile Include="Assets\ARToolKit5-Unity\Scripts\Editor\ARTrackedCameraEditor.cs" />
-    <Compile Include="Assets\ARToolKit5-Unity\Scripts\Editor\ARTrackedCameraGizmo.cs" />
-    <Compile Include="Assets\ARToolKit5-Unity\Scripts\Editor\ARTrackedObjectEditor.cs" />
-    <Compile Include="Assets\ARToolKit5-Unity\Scripts\Editor\ARTrackedObjectGizmo.cs" />
-    <Compile Include="Assets\ARToolKit5-Unity\Scripts\Editor\ARTransitionalCameraEditor.cs" />
     <Compile Include="Assets\ColorTracker\Demos\Scripts\Editor\CustomLayerGenerator.cs" />
     <Compile Include="Assets\ColorTracker\Scripts\Editor\ColorTrackerPanelEditor.cs" />
     <Compile Include="Assets\ColorTracker\Scripts\Editor\WebcamExplorerEditor.cs" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="Assets\ARToolKit5-Unity\CHANGELOG.txt" />
-    <None Include="Assets\ARToolKit5-Unity\Resources\Shaders\Mask.shader" />
-    <None Include="Assets\ARToolKit5-Unity\Resources\Shaders\VideoPlaneNoLight.shader" />
-    <None Include="Assets\ARToolKit5-Unity\Resources\ardata\markers\patt.hiro.txt" />
-    <None Include="Assets\ARToolKit5-Unity\Resources\ardata\markers\patt.kanji.txt" />
     <None Include="Assets\Plugins\Android\AndroidManifest.xml" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

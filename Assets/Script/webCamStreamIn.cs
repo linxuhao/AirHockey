@@ -72,13 +72,17 @@ public class webCamStreamIn : MonoBehaviour {
 
     [Tooltip("Select a gameObject simulate voxel")]
     public GameObject voxel;
+    //for game mode, created in script
     private GameObject invisibleVoxel;
+    //for mode selection
     private GameObject currentUsingVoxel;
     private List<GameObject> voxels;
     //the pointer of voxels in each frame, to know which voxels we are currently working on
     private int voxelPointer;
     //calculate this once and use it, to gain some performances
     private float voxelY;
+    //to put voxels under this game object folder
+    private GameObject voxelFolder;
 
     // Use this for initialization
     void Start (){
@@ -139,6 +143,7 @@ public class webCamStreamIn : MonoBehaviour {
         {
             currentUsingVoxel = invisibleVoxel;
         }
+        voxelFolder = new GameObject("VoxelObjects");
     }
 
     private void initializeGameZone() {
@@ -305,6 +310,8 @@ public class webCamStreamIn : MonoBehaviour {
         }
         else {//if we need more voxels, instanciate them and save them
             GameObject vox = Instantiate(currentUsingVoxel, worldPosition, Quaternion.identity);
+            //set parent to have a organized inspector
+            vox.transform.parent = voxelFolder.transform;
             voxels.Add(vox);
         }
         voxelPointer++;
