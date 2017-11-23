@@ -21,7 +21,13 @@ public class webCamStreamIn : MonoBehaviour {
     private int webCamHeight;
     private int webCamWidth;
     private Color[] webcamFrame;
-
+    [Header("Webcam calibration options %")]
+    public int leftOffset;
+    public int rightOffset;
+    public int topOffset;
+    public int botOffset;
+    private int usableWebCamHeight;
+    private int usableWebCamWidth;
     //camera
     private Camera cam;
     private RenderTexture camTexture;
@@ -106,10 +112,10 @@ public class webCamStreamIn : MonoBehaviour {
 
         initializeWebcam();
 
-        webcamFrame = new Color[webCamHeight * webCamWidth];
+        webcamFrame = new Color[usableWebCamHeight * usableWebCamWidth];
 
         //create a new 2d texture to display processed web cam view
-        processedWebcamView = new Texture2D(webCamWidth, webCamHeight);
+        processedWebcamView = new Texture2D(usableWebCamWidth, usableWebCamHeight);
 
         //display webcam content in this object's material, the content are processed per frame in update methode.
         //rend.material.mainTexture = webcam;
@@ -196,8 +202,11 @@ public class webCamStreamIn : MonoBehaviour {
         webCamHeight = webcam.height;
         webCamWidth = webcam.width;
 
-        Debug.Log("webcam width : " + webCamWidth);
-        Debug.Log("webcam height : " + webCamHeight);
+        usableWebCamHeight = webCamHeight * (100 - topOffset - botOffset)/100;
+        usableWebCamWidth = webCamWidth * (100 - leftOffset - rightOffset)/100;
+
+        Debug.Log("webcam width : " + webCamWidth + "usable webcam width : " + usableWebCamWidth);
+        Debug.Log("webcam height : " + webCamHeight + "usable webcam width : " + usableWebCamHeight);
     }
 
     // Update is called once per frame
@@ -227,14 +236,14 @@ public class webCamStreamIn : MonoBehaviour {
                 imageProcessCycle = 1;
                 //process on webcam frame
                 //create a empty temp array
-                Color[] tempArray = new Color[webCamWidth*webCamHeight];
+                Color[] tempArray = new Color[usableWebCamWidth * usableWebCamHeight];
                 for (int i = 0; i < webcamFrame.Length; i++) {
                     //if is not a background and is a border
-                    if (!isRedColor(webcamFrame[i])&& isBorder(webcamFrame, webCamWidth, i)){
-                        if (hasBorderAround(tempArray, webCamWidth, i)){
+                    if (!isRedColor(webcamFrame[i])&& isBorder(webcamFrame, usableWebCamWidth, i)){
+                        if (hasBorderAround(tempArray, usableWebCamWidth, i)){
                             //mark this pixel to red in display array
                             webcamFrame[i] = colorTrackingMark;
-                            fireVoxel(webCamWidth, webCamHeight, i);
+                            fireVoxel(usableWebCamWidth, usableWebCamHeight, i);
                         }
                         else {
                             //mark this pixel to red in temp array, potential border and noise pixel
@@ -328,7 +337,9 @@ public class webCamStreamIn : MonoBehaviour {
 
     private Color[] getWebcamPixels(){
         Color[] frames = null;
-        frames = webcam.GetPixels();
+        int xFrom = webCamWidth * leftOffset / 100;
+        int yFrom = webCamHeight * topOffset / 100;
+        frames = webcam.GetPixels(xFrom, yFrom, usableWebCamWidth, usableWebCamHeight);
         return frames;
     }
 

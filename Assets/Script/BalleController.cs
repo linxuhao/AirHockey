@@ -6,7 +6,7 @@ using UnityEngine;
 public class BalleController : MonoBehaviour {
 
     public bool pushTheBallOnStart;
-    private float speed;
+    public float speed;
     public Vector3 direction;
     private Rigidbody rb;
 
@@ -29,12 +29,38 @@ public class BalleController : MonoBehaviour {
         float tempSpeed = speed;
         //return harder when hitting walls
         GameObject collider = collision.collider.gameObject;
-        if (collider.CompareTag("murNord") || collider.CompareTag("murSud") || collider.CompareTag("murOuest") || collider.CompareTag("murEst")) {
-            tempSpeed = tempSpeed * 5;
+        if (collider.CompareTag("murNord") || collider.CompareTag("murSud")) {
+
+            tempSpeed *= 4;
+            choc(tempSpeed, direction.x, -direction.z);
+
+        } else if (collider.CompareTag("murOuest") || collider.CompareTag("murEst")) {
+            tempSpeed *= 4;
+            choc(tempSpeed, -direction.x, direction.z);
         }
-        ContactPoint contact = collision.contacts[0];
-        Vector3 contactVector = transform.position - contact.point;
-        choc(tempSpeed, contactVector.x, contactVector.z);
+        else {
+            //the center of contact points
+            Vector3 contactPoint = new Vector3();
+            float x = 0;
+            float y = 0;
+            float z = 0;
+            for (int i = 0; i < collision.contacts.Length; i++) {
+                ContactPoint contact = collision.contacts[i];
+                x += contact.point.x;
+                y += contact.point.y;
+                z += contact.point.z;
+            }
+            x /= collision.contacts.Length;
+            y /= collision.contacts.Length;
+            z /= collision.contacts.Length;
+            contactPoint.x = x;
+            contactPoint.y = y;
+            contactPoint.z = z;
+
+            Vector3 contactVector = transform.position - contactPoint;
+            choc(tempSpeed, contactVector.x, contactVector.z);
+        }
+        
     }
 
     //x and y on 2D plan, is x and z on 3D plan
