@@ -23,43 +23,49 @@ public class BalleController : MonoBehaviour {
     }
 
     void Update(){
-    }
-
-    void OnCollisionEnter(Collision collision){
+        //check position instead of using collider when hitting wall
+        float x = transform.position.x;
+        float z = transform.position.z;
         float tempSpeed = speed;
-        //return harder when hitting walls
-        GameObject collider = collision.collider.gameObject;
-        if (collider.CompareTag("murNord") || collider.CompareTag("murSud")) {
+        if (x > webCamStreamIn.instance.xEnd - 0.5 || x < webCamStreamIn.instance.xBegin + 0.5)
+        {
 
             tempSpeed *= 4;
             choc(tempSpeed, direction.x, -direction.z);
 
-        } else if (collider.CompareTag("murOuest") || collider.CompareTag("murEst")) {
+        }
+        else if (z > webCamStreamIn.instance.zEnd - 0.5 || z < webCamStreamIn.instance.zBegin + 0.5)
+        {
             tempSpeed *= 4;
             choc(tempSpeed, -direction.x, direction.z);
         }
-        else {
-            //the center of contact points
-            Vector3 contactPoint = new Vector3();
-            float x = 0;
-            float y = 0;
-            float z = 0;
-            for (int i = 0; i < collision.contacts.Length; i++) {
-                ContactPoint contact = collision.contacts[i];
-                x += contact.point.x;
-                y += contact.point.y;
-                z += contact.point.z;
-            }
-            x /= collision.contacts.Length;
-            y /= collision.contacts.Length;
-            z /= collision.contacts.Length;
-            contactPoint.x = x;
-            contactPoint.y = y;
-            contactPoint.z = z;
 
-            Vector3 contactVector = transform.position - contactPoint;
-            choc(tempSpeed, contactVector.x, contactVector.z);
+    }
+
+    void OnCollisionEnter(Collision collision){
+        float tempSpeed = speed;
+
+        //the center of contact points
+        Vector3 contactPoint = new Vector3();
+        float x = 0;
+        float y = 0;
+        float z = 0;
+        for (int i = 0; i < collision.contacts.Length; i++) {
+            ContactPoint contact = collision.contacts[i];
+            x += contact.point.x;
+            y += contact.point.y;
+            z += contact.point.z;
         }
+        x /= collision.contacts.Length;
+        y /= collision.contacts.Length;
+        z /= collision.contacts.Length;
+        contactPoint.x = x;
+        contactPoint.y = y;
+        contactPoint.z = z;
+
+        Vector3 contactVector = transform.position - contactPoint;
+        choc(tempSpeed, contactVector.x, contactVector.z);
+        
         
     }
 

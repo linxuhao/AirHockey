@@ -4,15 +4,18 @@ using System.Collections.Generic;
 using UnityEngine;
 
 
-public class webCamStreamIn : MonoBehaviour {
-    public enum outputMode {
+public class webCamStreamIn : MonoBehaviour
+{
+    static public webCamStreamIn instance;
+
+    public enum outputMode
+    {
         debug,
         game
     }
     [Header("Camera input options")]
     [Tooltip("Invert X and Y from webcam")]
     public bool invertAxisXYFromCamera;
-
     //to display content of webcam on a material
     private Renderer rend;
 
@@ -53,7 +56,7 @@ public class webCamStreamIn : MonoBehaviour {
     public int webcamResolutionHeight;
 
     private Color colorTrackingMark = Color.green;
-    
+
     //in seconds, -0.01f to begin the refresh on the first frame
     private float nextRefreshTime = -0.01f;
     //in seconds
@@ -66,10 +69,14 @@ public class webCamStreamIn : MonoBehaviour {
     private int imageProcessCycle;
 
     //game zone attributs
-    float xBegin;
-    float xEnd;
-    float zBegin;
-    float zEnd;
+    [HideInInspector]
+    public float xBegin;
+    [HideInInspector]
+    public float xEnd;
+    [HideInInspector]
+    public float zBegin;
+    [HideInInspector]
+    public float zEnd;
 
     //voxel attributs
     [Header("Physic simulation")]
@@ -91,20 +98,29 @@ public class webCamStreamIn : MonoBehaviour {
     private GameObject voxelFolder;
 
     // Use this for initialization
-    void Start (){
-        if (imageProcessRate <= 0){
+    void Start()
+    {
+        if (instance == null) {
+            instance = this;
+        }
+
+        if (imageProcessRate <= 0)
+        {
             Debug.LogError("Please specify imageProcessRate, it is Rate of frame per image process, lower is more accurate but cost in performance.");
         }
 
-        if (grayscaletolerance <= 0){
+        if (grayscaletolerance <= 0)
+        {
             Debug.LogError("Please specify grayscaletolerance, it is used to distinguish a border pixel from others.");
         }
 
-        if (webcamResolutionWidth <= 0){
+        if (webcamResolutionWidth <= 0)
+        {
             Debug.LogError("Please specify webcam Resolution Width");
         }
 
-        if (webcamResolutionHeight <= 0){
+        if (webcamResolutionHeight <= 0)
+        {
             Debug.LogError("Please specify webcam Resolution Height");
         }
 
@@ -152,25 +168,35 @@ public class webCamStreamIn : MonoBehaviour {
         voxelFolder = new GameObject("VoxelObjects");
     }
 
-    private void initializeGameZone() {
+    private void initializeGameZone()
+    {
         GameObject murs = GameObject.FindGameObjectsWithTag("backgroundMurs")[0];
-        
-        for (int i = 0; i < murs.transform.childCount; i++) {
+
+        for (int i = 0; i < murs.transform.childCount; i++)
+        {
             Transform child = murs.transform.GetChild(i);
-            if (child.CompareTag("murOuest")) {
+            if (child.CompareTag("murOuest"))
+            {
                 xBegin = child.position.x;
-            }else if (child.CompareTag("murEst")){
+            }
+            else if (child.CompareTag("murEst"))
+            {
                 xEnd = child.position.x;
-            }else if (child.CompareTag("murSud")){
+            }
+            else if (child.CompareTag("murSud"))
+            {
                 zBegin = child.position.z;
-            }else if (child.CompareTag("murNord")){
+            }
+            else if (child.CompareTag("murNord"))
+            {
                 zEnd = child.position.z;
             }
 
         }
     }
 
-    private void initializeBackgroundCamera(){
+    private void initializeBackgroundCamera()
+    {
         //get the background camera
         cam = GameObject.FindGameObjectWithTag("backgroundCamera").GetComponent<Camera>();
         camTexture = cam.targetTexture;
@@ -182,12 +208,14 @@ public class webCamStreamIn : MonoBehaviour {
         camFrame = new Color[camHeight * camWidth];
     }
 
-    private void initializeWebcam() {
+    private void initializeWebcam()
+    {
         string webCamName = null;
 
         //find webcams
         WebCamDevice[] devices = WebCamTexture.devices;
-        for (var i = 0; i < devices.Length; i++) {
+        for (var i = 0; i < devices.Length; i++)
+        {
             //Debug.Log("webcam found : " + devices[i].name);
             webCamName = devices[i].name;
         }
@@ -202,22 +230,25 @@ public class webCamStreamIn : MonoBehaviour {
         webCamHeight = webcam.height;
         webCamWidth = webcam.width;
 
-        usableWebCamHeight = webCamHeight * (100 - topOffset - botOffset)/100;
-        usableWebCamWidth = webCamWidth * (100 - leftOffset - rightOffset)/100;
+        usableWebCamHeight = webCamHeight * (100 - topOffset - botOffset) / 100;
+        usableWebCamWidth = webCamWidth * (100 - leftOffset - rightOffset) / 100;
 
         Debug.Log("webcam width : " + webCamWidth + "usable webcam width : " + usableWebCamWidth);
         Debug.Log("webcam height : " + webCamHeight + "usable webcam width : " + usableWebCamHeight);
     }
 
     // Update is called once per frame
-    void Update () {
-        
+    void Update()
+    {
+
         //reset voxel pointer
         voxelPointer = 0;
         //if in game main background camera does exist and be active
-        if (cam != null && cam.isActiveAndEnabled) {
+        if (cam != null && cam.isActiveAndEnabled)
+        {
             //get webcam pixel array
             webcamFrame = getWebcamPixels();
+            webcamFrame = sharpen(webcamFrame);
 
             //get in game background camera pixel array
             RenderTexture.active = camTexture;
@@ -225,34 +256,41 @@ public class webCamStreamIn : MonoBehaviour {
             cam2d.Apply();
             camFrame = cam2d.GetPixels();
 
-            if (Time.time > nextRefreshTime) {
+            if (Time.time > nextRefreshTime)
+            {
                 nextRefreshTime += backgroundColorRefreshFrequency;
                 //process on camera background colors
                 //backgroundColors = getBackgroundColors();
                 //Debug.Log("there are " + backgroundColors.Count + " differents backgroundColors");  
             }
 
-            if (imageProcessCycle >= imageProcessRate){
+            if (imageProcessCycle >= imageProcessRate)
+            {
                 imageProcessCycle = 1;
                 //process on webcam frame
                 //create a empty temp array
                 Color[] tempArray = new Color[usableWebCamWidth * usableWebCamHeight];
-                for (int i = 0; i < webcamFrame.Length; i++) {
+                for (int i = 0; i < webcamFrame.Length; i++)
+                {
                     //if is not a background and is a border
-                    if (!isRedColor(webcamFrame[i])&& isBorder(webcamFrame, usableWebCamWidth, i)){
-                        if (hasBorderAround(tempArray, usableWebCamWidth, i)){
+                    if (isBorder(webcamFrame, usableWebCamWidth, i))
+                    {
+                        if (hasBorderAround(tempArray, usableWebCamWidth, i))
+                        {
                             //mark this pixel to red in display array
                             webcamFrame[i] = colorTrackingMark;
                             fireVoxel(usableWebCamWidth, usableWebCamHeight, i);
                         }
-                        else {
+                        else
+                        {
                             //mark this pixel to red in temp array, potential border and noise pixel
                             tempArray[i] = colorTrackingMark;
                         }
                     }
                 }
             }
-            else {
+            else
+            {
                 imageProcessCycle++;
             }
             cam2d.SetPixels(camFrame);
@@ -263,24 +301,16 @@ public class webCamStreamIn : MonoBehaviour {
             //Debug.Log("The number of voxel needed is : " + voxelPointer);
             disableUnusedVoxels(voxelPointer);
         }
-        else {
+        else
+        {
             Debug.LogError("there is no active main  background camera in game, check if your camera is tagged as backgroundCamera");
         }
     }
 
     private void disableUnusedVoxels(int voxelPointer){
-        for (int i = voxelPointer; i < voxels.Count; i++) {
+        for (int i = voxelPointer; i < voxels.Count; i++){
             voxels[i].SetActive(false);
         }
-    }
-
-    private bool isRedColor(Color color){
-        bool result = false;
-        float maxGB = Mathf.Max(color.g, color.b);
-        if (color.r > maxGB && maxGB < 100) {
-            result = true;
-        }
-        return result;
     }
 
     //place voxels from background camera to background(ball in background, foreground are the real objects)
@@ -300,24 +330,26 @@ public class webCamStreamIn : MonoBehaviour {
         // y in camera axis is z in world axis
         float x = xWebcamScreenPercentage;
         float y = yWebcamScreenPercentage;
-        if (invertAxisXYFromCamera) {
+        if (invertAxisXYFromCamera){
             x = yWebcamScreenPercentage;
             y = 1 - xWebcamScreenPercentage;
         }
         Vector3 cameraPositionBegin = new Vector3(x, voxelY, y);
         Vector3 worldPosition = CameraPercentPositionToWorldPoint(cameraPositionBegin);
-
         placeOrInstantiateVoxel(worldPosition);
     }
 
-    private void placeOrInstantiateVoxel(Vector3 worldPosition) {
+    private void placeOrInstantiateVoxel(Vector3 worldPosition)
+    {
         //if have instantiated voxels, use them
-        if (voxels.Count > voxelPointer){
+        if (voxels.Count > voxelPointer)
+        {
             GameObject vox = voxels[voxelPointer];
             vox.SetActive(true);
             vox.transform.position = worldPosition;
         }
-        else {//if we need more voxels, instanciate them and save them
+        else
+        {//if we need more voxels, instanciate them and save them
             GameObject vox = Instantiate(currentUsingVoxel, worldPosition, Quaternion.identity);
             //set parent to have a organized inspector
             vox.transform.parent = voxelFolder.transform;
@@ -326,7 +358,7 @@ public class webCamStreamIn : MonoBehaviour {
         voxelPointer++;
     }
 
-    private Vector3 CameraPercentPositionToWorldPoint(Vector3 cameraPosition) {
+    private Vector3 CameraPercentPositionToWorldPoint(Vector3 cameraPosition){
         Vector3 result = cameraPosition;
         float availableXScale = xEnd - xBegin;
         float availableZScale = zEnd - zBegin;
@@ -343,10 +375,11 @@ public class webCamStreamIn : MonoBehaviour {
         return frames;
     }
 
-    private HashSet<Color> getBackgroundColors() {
+    private HashSet<Color> getBackgroundColors(){
         HashSet<Color> result = new HashSet<Color>();
         //process background from camera
-        for (int i = 0; i < camFrame.Length; i++) {
+        for (int i = 0; i < camFrame.Length; i++)
+        {
             //add operation success only if element not already exist in set
             result.Add(camFrame[i]);
         }
@@ -355,7 +388,7 @@ public class webCamStreamIn : MonoBehaviour {
 
 
     //test if color 1 has big grayscale with color2
-    private bool hasBigGrayscaleDifference(Color color1, Color color2, float tolerence) {
+    private bool hasBigGrayscaleDifference(Color color1, Color color2, float tolerence){
         float grayscale1 = color1.grayscale;
         float grayscale2 = color2.grayscale;
         float result = Mathf.Abs(grayscale1 - grayscale2);
@@ -367,14 +400,18 @@ public class webCamStreamIn : MonoBehaviour {
         return result > tolerence;
     }
 
-    private bool isBorder(Color[] pixelArray, int imageWidth, int pixelPosition) {
+    private bool isBorder(Color[] pixelArray, int imageWidth, int pixelPosition)
+    {
         bool result = true;
         //check top and bottom
-        for (int i = pixelPosition - imageWidth; i <= pixelPosition + imageWidth; i += imageWidth) {
+        for (int i = pixelPosition - imageWidth; i <= pixelPosition + imageWidth; i += imageWidth)
+        {
             //check left and right
-            for (int j = i - 1; j <= i + 1; j++) {
+            for (int j = i - 1; j <= i + 1; j++)
+            {
                 //begins with j = pixelPosition - imageWidth -1 ends a*on pixelPosition + imageWidth + 1, 9 possible values, the center is self
-                if (j>0 && j < pixelArray.Length && j != pixelPosition && !hasBigGrayscaleDifference(pixelArray[j],pixelArray[pixelPosition], grayscaletolerance)) {
+                if (j > 0 && j < pixelArray.Length && j != pixelPosition && !hasBigGrayscaleDifference(pixelArray[j], pixelArray[pixelPosition], grayscaletolerance))
+                {
                     // does not have Big Grayscale Difference with nearby pixles means is not a a border
                     return false;
                 }
@@ -383,21 +420,73 @@ public class webCamStreamIn : MonoBehaviour {
         return result;
     }
 
-    private bool hasBorderAround(Color[] pixelArray, int imageWidth, int pixelPosition){
-        bool result = false;
+    private bool hasBorderAround(Color[] pixelArray, int imageWidth, int pixelPosition)
+    {
         int count = 0;
         //check top and bottom
-        for (int i = pixelPosition - imageWidth; i <= pixelPosition + imageWidth; i += imageWidth){
+        for (int i = pixelPosition - imageWidth; i <= pixelPosition + imageWidth; i += imageWidth)
+        {
             //check left and right
-            for (int j = i - 1; j <= i + 1; j++){
+            for (int j = i - 1; j <= i + 1; j++)
+            {
                 //begins with j = pixelPosition - imageWidth -1 ends a*on pixelPosition + imageWidth + 1, 9 possible values, the center is self
-                if (j > 0 && j < pixelArray.Length && j != pixelPosition && pixelArray[j] == colorTrackingMark){
+                if (j > 0 && j < pixelArray.Length && j != pixelPosition && pixelArray[j] == colorTrackingMark)
+                {
                     count++;
-                    if (count > noiseFilteringLevel) {
+                    if (count > noiseFilteringLevel)
+                    {
                         return true;
-                    }     
+                    }
                 }
             }
+        }
+        return false;
+    }
+
+    /// <summary>
+    /// sharpen image for better edge detection
+    /// </summary>
+    /// <param name="pixelArray"></param>
+    /// <returns></returns>
+    private Color[] sharpen(Color[] pixelArray){
+
+        Color[] result = new Color[pixelArray.Length];
+
+        double[,] filter = new double[3, 3]{
+            { 1,2,1 },
+            { 2,4,2 },
+            { 1,2,1 }
+        };
+
+        double factor = 1.0;
+
+        int imageWidth = usableWebCamWidth;
+
+        //for each pixel
+        for (int x = 0; x < usableWebCamWidth; x++) {
+            for (int y = 0; y < usableWebCamHeight; y++) {
+                double red = 0.0, green = 0.0, blue = 0.0;
+                int pixelPosition = y * usableWebCamWidth + x;
+                //check top and bottom of pixel
+                for (int i = 0; i < 3; i++){
+                    //check left and right of pixel
+                    for (int j = 0; j < 3; j++){
+                        int neighbourPosition = (y + i - 1) * usableWebCamWidth + (x + j - 1);
+                        //begins with j = pixelPosition - imageWidth -1 ends a*on pixelPosition + imageWidth + 1, 9 possible values, the center is self
+                        if (neighbourPosition > 0 && neighbourPosition < pixelArray.Length){
+                            Color neighbour = pixelArray[neighbourPosition];
+                            red += neighbour.r * filter[i, j] / 16;
+                            green += neighbour.g * filter[i, j] / 16;
+                            blue += neighbour.b * filter[i, j] / 16;
+                        }
+                    }
+                }
+                Color pixel = pixelArray[pixelPosition];
+                float r = Math.Min(Math.Max((float)(factor * red), 0), 1);
+                float g = Math.Min(Math.Max((float)(factor * green), 0), 1);
+                float b = Math.Min(Math.Max((float)(factor * blue), 0), 1);
+                result[pixelPosition] = new Color(r, g, b);
+            }  
         }
         return result;
     }

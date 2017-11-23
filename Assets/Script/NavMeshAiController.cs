@@ -78,7 +78,19 @@ public class NavMeshAiController : MonoBehaviour {
 	}
 
     private void goToRightSide(Vector3 ballPosition) {
-        agent.SetDestination(new Vector3(transform.position.x,transform.position.y,ballPosition.z + 2));
+        float offset = 0;
+        if (Mathf.Approximately(ballPosition.x, transform.position.x)) {
+            if (transform.position.x > (xEnd + xBegin) / 2) {
+                //if im on top part i go from bottom side
+                offset = -2;
+            }
+            else {
+                //if im bottom part, i go from top side
+                offset = 2;
+            }
+            
+        }
+        agent.SetDestination(new Vector3(transform.position.x + offset, transform.position.y,ballPosition.z + 2));
     }
 
     private bool ballOnMyLeftSide(Vector3 ballPosition) {
