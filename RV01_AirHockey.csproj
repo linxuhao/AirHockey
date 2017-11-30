@@ -13,11 +13,13 @@
     <TargetFrameworkIdentifier>.NETFramework</TargetFrameworkIdentifier>
     <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
     <TargetFrameworkProfile>Unity Subset v3.5</TargetFrameworkProfile>
-    <CompilerResponseFile></CompilerResponseFile>
+    <CompilerResponseFile>
+    </CompilerResponseFile>
     <UnityProjectType>Game:1</UnityProjectType>
     <UnityBuildTarget>StandaloneWindows:5</UnityBuildTarget>
     <UnityVersion>2017.2.0f3</UnityVersion>
-    <RootNamespace></RootNamespace>
+    <RootNamespace>
+    </RootNamespace>
     <LangVersion>4</LangVersion>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
@@ -242,10 +244,12 @@
     <Compile Include="Assets\ColorTracker\Scripts\Integration\VideoCaptureRenderer.cs" />
     <Compile Include="Assets\Script\AIController.cs" />
     <Compile Include="Assets\Script\BalleController.cs" />
+    <Compile Include="Assets\Script\ButtonController.cs" />
     <Compile Include="Assets\Script\NavMeshAiController.cs" />
     <Compile Include="Assets\Script\PlayerController.cs" />
     <Compile Include="Assets\Script\ScoreController.cs" />
     <Compile Include="Assets\Script\webCamStreamIn.cs" />
+    <Compile Include="Assets\Script\VoxelControllers.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Assets\Plugins\Android\AndroidManifest.xml" />

@@ -9,11 +9,11 @@ public class BalleController : MonoBehaviour {
     public float speed;
     public Vector3 direction;
     private Rigidbody rb;
+    private bool onEdge = false;
 
     // Use this for initialization
     void Start () {
         rb = GetComponent<Rigidbody>();
-        speed = 10f;
         direction = new Vector3(1f, 0, 0.8f);
 
         if (pushTheBallOnStart) {
@@ -23,55 +23,47 @@ public class BalleController : MonoBehaviour {
     }
 
     void Update(){
-        //check position instead of using collider when hitting wall
-        float x = transform.position.x;
-        float z = transform.position.z;
-        float tempSpeed = speed;
-        if (x > webCamStreamIn.instance.xEnd - 0.5 || x < webCamStreamIn.instance.xBegin + 0.5)
-        {
-
-            tempSpeed *= 4;
-            choc(tempSpeed, direction.x, -direction.z);
-
-        }
-        else if (z > webCamStreamIn.instance.zEnd - 0.5 || z < webCamStreamIn.instance.zBegin + 0.5)
-        {
-            tempSpeed *= 4;
-            choc(tempSpeed, -direction.x, direction.z);
-        }
-
     }
 
     void OnCollisionEnter(Collision collision){
         float tempSpeed = speed;
-
-        //the center of contact points
-        Vector3 contactPoint = new Vector3();
-        float x = 0;
-        float y = 0;
-        float z = 0;
-        for (int i = 0; i < collision.contacts.Length; i++) {
-            ContactPoint contact = collision.contacts[i];
-            x += contact.point.x;
-            y += contact.point.y;
-            z += contact.point.z;
+        Collider collider = collision.collider;
+        //hit wall is different from hitting objects
+        if (collider.CompareTag("murSud") || collider.CompareTag("murNord")){
+            choc(tempSpeed, direction.x, -direction.z);
         }
-        x /= collision.contacts.Length;
-        y /= collision.contacts.Length;
-        z /= collision.contacts.Length;
-        contactPoint.x = x;
-        contactPoint.y = y;
-        contactPoint.z = z;
+        else if (collider.CompareTag("murEst") || collider.CompareTag("murOuest")){
+            choc(tempSpeed, -direction.x, direction.z);
+        }
+        else
+        {
+            //the center of contact points
+            Vector3 contactPoint = new Vector3();
+            float x = 0;
+            float y = 0;
+            float z = 0;
+            for (int i = 0; i < collision.contacts.Length; i++){
+                ContactPoint contact = collision.contacts[i];
+                x += contact.point.x;
+                y += contact.point.y;
+                z += contact.point.z;
+            }
+            x /= collision.contacts.Length;
+            y /= collision.contacts.Length;
+            z /= collision.contacts.Length;
+            contactPoint.x = x;
+            contactPoint.y = y;
+            contactPoint.z = z;
 
-        Vector3 contactVector = transform.position - contactPoint;
-        choc(tempSpeed, contactVector.x, contactVector.z);
-        
-        
+            Vector3 contactVector = transform.position - contactPoint;
+            choc(tempSpeed, contactVector.x, contactVector.z);
+        }
     }
 
     //x and y on 2D plan, is x and z on 3D plan
-    public void choc(float force, float xDirection, float yDirection) {
+    public void choc(float speed, float xDirection, float yDirection) {
         direction = new Vector3(xDirection, 0, yDirection);
-        rb.AddForce(force * direction, ForceMode.Impulse);
+        Vector3 speedVector = new Vector3(direction.normalized.x * speed, 0, direction.normalized.z * speed);
+        rb.velocity = speedVector;
     }
 }

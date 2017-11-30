@@ -107,8 +107,3 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4ffd6ddfa67c9ec4faad85e1e1aca336, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  playZoneXBegin: 0
-  playZoneXEnd: 10
-  playZoneZBegin: -13
-  playZoneZEnd: -23
-  player: {fileID: 1051407574672054}

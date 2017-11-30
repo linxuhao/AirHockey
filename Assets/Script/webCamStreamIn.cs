@@ -68,6 +68,9 @@ public class webCamStreamIn : MonoBehaviour
     public int imageProcessRate;
     private int imageProcessCycle;
 
+    [Tooltip("times of blur before processing the image")]
+    public int blurStrength;
+
     //game zone attributs
     [HideInInspector]
     public float xBegin;
@@ -96,10 +99,16 @@ public class webCamStreamIn : MonoBehaviour
     private float voxelY;
     //to put voxels under this game object folder
     private GameObject voxelFolder;
+    [Header("Player Control")]
+    [Tooltip("From 0 to 1")]
+    //value needed by button controllers
+    public float currentFramePercentage;
+    [Tooltip("The number of frame to memorise data")]
+    //value needed by button controllers
+    public int frameMemoryNumber ;
 
     // Use this for initialization
-    void Start()
-    {
+    void Start() {
         if (instance == null) {
             instance = this;
         }
@@ -152,10 +161,12 @@ public class webCamStreamIn : MonoBehaviour
 
         //initialize voxel
         voxels = new List<GameObject>();
-        voxelY = voxel.transform.localScale.y / 2;
+        voxelY = 0;
         invisibleVoxel = new GameObject("invisibleVoxel");
         BoxCollider invisibleBox = invisibleVoxel.AddComponent<BoxCollider>() as BoxCollider;
+        invisibleBox.isTrigger = true;
         invisibleVoxel.transform.localScale = voxel.transform.localScale;
+        VoxelControllers control = invisibleVoxel.AddComponent<VoxelControllers>() as VoxelControllers;
 
         if (VoxelOutputMode == outputMode.debug)
         {
@@ -166,6 +177,7 @@ public class webCamStreamIn : MonoBehaviour
             currentUsingVoxel = invisibleVoxel;
         }
         voxelFolder = new GameObject("VoxelObjects");
+        voxelFolder.transform.parent = transform;
     }
 
     private void initializeGameZone()
@@ -248,8 +260,9 @@ public class webCamStreamIn : MonoBehaviour
         {
             //get webcam pixel array
             webcamFrame = getWebcamPixels();
-            webcamFrame = sharpen(webcamFrame);
-
+            for (int i = 0; i < blurStrength; i++) {
+                webcamFrame = blur(webcamFrame);
+            }
             //get in game background camera pixel array
             RenderTexture.active = camTexture;
             cam2d.ReadPixels(new Rect(0, 0, camWidth, camHeight), 0, 0);
@@ -420,38 +433,35 @@ public class webCamStreamIn : MonoBehaviour
         return result;
     }
 
-    private bool hasBorderAround(Color[] pixelArray, int imageWidth, int pixelPosition)
-    {
+    private bool hasBorderAround(Color[] pixelArray, int imageWidth, int pixelPosition){
         int count = 0;
         //check top and bottom
-        for (int i = pixelPosition - imageWidth; i <= pixelPosition + imageWidth; i += imageWidth)
-        {
+        for (int i = pixelPosition - imageWidth; i <= pixelPosition + imageWidth; i += imageWidth){
             //check left and right
-            for (int j = i - 1; j <= i + 1; j++)
-            {
+            for (int j = i - 1; j <= i + 1; j++){
                 //begins with j = pixelPosition - imageWidth -1 ends a*on pixelPosition + imageWidth + 1, 9 possible values, the center is self
-                if (j > 0 && j < pixelArray.Length && j != pixelPosition && pixelArray[j] == colorTrackingMark)
-                {
+                if (j > 0 && j < pixelArray.Length && j != pixelPosition && pixelArray[j].Equals(colorTrackingMark)){
                     count++;
-                    if (count > noiseFilteringLevel)
-                    {
+                    if (count >= noiseFilteringLevel){
                         return true;
                     }
                 }
             }
         }
+        
         return false;
     }
 
     /// <summary>
-    /// sharpen image for better edge detection
+    /// blur image for better edge detection, using gaussian filter to supress noise pixels
     /// </summary>
     /// <param name="pixelArray"></param>
     /// <returns></returns>
-    private Color[] sharpen(Color[] pixelArray){
+    private Color[] blur(Color[] pixelArray){
 
         Color[] result = new Color[pixelArray.Length];
 
+        //gaussian filter
         double[,] filter = new double[3, 3]{
             { 1,2,1 },
             { 2,4,2 },

@@ -22,6 +22,7 @@ TagManager:
   - backgroundMurs
   - ball
   - voxel
+  - AI
   layers:
   - Default
   - TransparentFX
