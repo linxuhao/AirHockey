@@ -29,13 +29,13 @@ public class PlayerController : MonoBehaviour {
         if (transform.position.x < middle)
         {
             playZoneXBegin = webCamStreamIn.instance.xBegin + 0.5 * transform.localScale.x;
-            playZoneXEnd = middle - 0.5 * transform.localScale.x;
+            playZoneXEnd = middle + 1 + 0.5 * transform.localScale.x;
             xDirection = 1;
         }
         else
         {
             //right means p2
-            playZoneXBegin = middle + 0.5 * transform.localScale.x;
+            playZoneXBegin = middle - 1 - 0.5 * transform.localScale.x;
             playZoneXEnd = webCamStreamIn.instance.xEnd - 0.5 * transform.localScale.x;
             xDirection = -1;
         }

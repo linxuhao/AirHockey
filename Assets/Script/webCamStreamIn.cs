@@ -54,13 +54,12 @@ public class webCamStreamIn : MonoBehaviour
     public int webcamResolutionWidth;
     [Tooltip("webcam Resolution Height")]
     public int webcamResolutionHeight;
+    [Tooltip("The gamma mutiplicator to gamma correction on images")]
+    public int gammaMultiplicator;
 
     private Color colorTrackingMark = Color.green;
 
-    //in seconds, -0.01f to begin the refresh on the first frame
-    private float nextRefreshTime = -0.01f;
-    //in seconds
-    private float backgroundColorRefreshFrequency = 1.0f;
+    HashSet<Color> backgroundColors = new HashSet<Color>();
 
     ////////////////////////////// Public variables  //////////////////////////////
 
@@ -252,12 +251,16 @@ public class webCamStreamIn : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-
         //reset voxel pointer
         voxelPointer = 0;
         //if in game main background camera does exist and be active
         if (cam != null && cam.isActiveAndEnabled)
         {
+            //if user presses G, then get backgroundColors
+            if (Input.GetKeyDown(KeyCode.G)) {
+                backgroundColors = getBackgroundColors();
+                Debug.Log("There are " + backgroundColors.Count + " background colors recorded");
+            }
             //get webcam pixel array
             webcamFrame = getWebcamPixels();
             for (int i = 0; i < blurStrength; i++) {
@@ -269,14 +272,6 @@ public class webCamStreamIn : MonoBehaviour
             cam2d.Apply();
             camFrame = cam2d.GetPixels();
 
-            if (Time.time > nextRefreshTime)
-            {
-                nextRefreshTime += backgroundColorRefreshFrequency;
-                //process on camera background colors
-                //backgroundColors = getBackgroundColors();
-                //Debug.Log("there are " + backgroundColors.Count + " differents backgroundColors");  
-            }
-
             if (imageProcessCycle >= imageProcessRate)
             {
                 imageProcessCycle = 1;
@@ -286,7 +281,7 @@ public class webCamStreamIn : MonoBehaviour
                 for (int i = 0; i < webcamFrame.Length; i++)
                 {
                     //if is not a background and is a border
-                    if (isBorder(webcamFrame, usableWebCamWidth, i))
+                    if (!isBackground(webcamFrame[i]) && isBorder(webcamFrame, usableWebCamWidth, i))
                     {
                         if (hasBorderAround(tempArray, usableWebCamWidth, i))
                         {
@@ -318,6 +313,10 @@ public class webCamStreamIn : MonoBehaviour
         {
             Debug.LogError("there is no active main  background camera in game, check if your camera is tagged as backgroundCamera");
         }
+    }
+
+    private bool isBackground(Color color){
+        return backgroundColors.Contains(color);
     }
 
     private void disableUnusedVoxels(int voxelPointer){
@@ -391,10 +390,10 @@ public class webCamStreamIn : MonoBehaviour
     private HashSet<Color> getBackgroundColors(){
         HashSet<Color> result = new HashSet<Color>();
         //process background from camera
-        for (int i = 0; i < camFrame.Length; i++)
+        for (int i = 0; i < webcamFrame.Length; i++)
         {
             //add operation success only if element not already exist in set
-            result.Add(camFrame[i]);
+            result.Add(webcamFrame[i]);
         }
         return result;
     }
@@ -402,8 +401,14 @@ public class webCamStreamIn : MonoBehaviour
 
     //test if color 1 has big grayscale with color2
     private bool hasBigGrayscaleDifference(Color color1, Color color2, float tolerence){
-        float grayscale1 = color1.grayscale;
-        float grayscale2 = color2.grayscale;
+        Color gamma1 = color1;
+        Color gamma2 = color2;
+        for (int i=0; i< gammaMultiplicator; i++) {
+            gamma1 = gamma1.gamma;
+            gamma2 = gamma2.gamma;
+        }
+        float grayscale1 = gamma1.grayscale;
+        float grayscale2 = gamma2.grayscale;
         float result = Mathf.Abs(grayscale1 - grayscale2);
         //if (count < max && result != 0)
         //{

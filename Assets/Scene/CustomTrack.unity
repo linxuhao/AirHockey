@@ -179,6 +179,16 @@ Prefab:
       propertyPath: zSpeed
       value: 20
       objectReference: {fileID: 0}
+    - target: {fileID: 23252992401268790, guid: 7e3e1d4443def914d8f65f7e2f590224,
+        type: 2}
+      propertyPath: m_ReceiveShadows
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 23252992401268790, guid: 7e3e1d4443def914d8f65f7e2f590224,
+        type: 2}
+      propertyPath: m_CastShadows
+      value: 0
+      objectReference: {fileID: 0}
     m_RemovedComponents:
     - {fileID: 65533471995660266, guid: 7e3e1d4443def914d8f65f7e2f590224, type: 2}
   m_ParentPrefab: {fileID: 100100000, guid: 7e3e1d4443def914d8f65f7e2f590224, type: 2}
@@ -312,19 +322,20 @@ MonoBehaviour:
   invertAxisXYFromCamera: 0
   leftOffset: 20
   rightOffset: 20
-  topOffset: 20
+  topOffset: 30
   botOffset: 25
   noiseFilteringLevel: 3
-  grayscaletolerance: 0.005
+  grayscaletolerance: 0.0036
   webcamResolutionWidth: 320
   webcamResolutionHeight: 240
+  gammaMultiplicator: 4
   imageProcessRate: 1
-  blurStrength: 0
+  blurStrength: 1
   xBegin: 0
   xEnd: 0
   zBegin: 0
   zEnd: 0
-  VoxelOutputMode: 0
+  VoxelOutputMode: 1
   voxel: {fileID: 1901194300046840, guid: 2ad528596cfb24e47b576634b892b829, type: 2}
   currentFramePercentage: 0.5
   frameMemoryNumber: 5
@@ -335,8 +346,8 @@ MeshRenderer:
   m_PrefabInternal: {fileID: 0}
   m_GameObject: {fileID: 123086590}
   m_Enabled: 1
-  m_CastShadows: 1
-  m_ReceiveShadows: 1
+  m_CastShadows: 0
+  m_ReceiveShadows: 0
   m_DynamicOccludee: 1
   m_MotionVectors: 1
   m_LightProbeUsage: 1
@@ -1770,7 +1781,7 @@ RectTransform:
   m_GameObject: {fileID: 1418466886}
   m_LocalRotation: {x: 0.7071068, y: -0, z: -0, w: 0.7071068}
   m_LocalPosition: {x: 0, y: -12.000002, z: -18.000002}
-  m_LocalScale: {x: 0.09093606, y: 0.09093606, z: 0.09093606}
+  m_LocalScale: {x: 0.05997496, y: 0.05997496, z: 0.05997496}
   m_Children:
   - {fileID: 1053059543}
   - {fileID: 1148637219}
@@ -1902,6 +1913,11 @@ Prefab:
       propertyPath: speed
       value: 10
       objectReference: {fileID: 0}
+    - target: {fileID: 23870358817755852, guid: 8edc58af51e68d24da88a8b490079149,
+        type: 2}
+      propertyPath: m_ReceiveShadows
+      value: 0
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_ParentPrefab: {fileID: 100100000, guid: 8edc58af51e68d24da88a8b490079149, type: 2}
   m_IsPrefabParent: 0
@@ -1976,6 +1992,16 @@ Prefab:
         type: 2}
       propertyPath: zSpeed
       value: 20
+      objectReference: {fileID: 0}
+    - target: {fileID: 23486705894700486, guid: 8b43be3325268c743ace007d92dedf7a,
+        type: 2}
+      propertyPath: m_ReceiveShadows
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 23486705894700486, guid: 8b43be3325268c743ace007d92dedf7a,
+        type: 2}
+      propertyPath: m_CastShadows
+      value: 0
       objectReference: {fileID: 0}
     m_RemovedComponents:
     - {fileID: 65447232179972172, guid: 8b43be3325268c743ace007d92dedf7a, type: 2}
