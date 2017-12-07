@@ -9,16 +9,16 @@ public class ButtonController : MonoBehaviour {
     public GameObject player;
     private PlayerController playerControl;
     //for Z axis mouvement
-    private float[] oldZPosition;
+    private float[][] oldZPosition;
     private float currentZPosition;
     //to calculate a average z position as a fake center
     private float totalZPosition;
     private float zPositionCount;
     //for X axis mouvement
-    private float[] oldPressionValue;
+    private float[][] oldPressionValue;
     private float currentPressionValue;
     //the percentage of value we use from current frame
-    private float currentFramePercentage;
+    private float alpha;
     private bool initialized = false;
 
     // Use this for initialization
@@ -30,11 +30,21 @@ public class ButtonController : MonoBehaviour {
         //if player not active
         if (player.activeSelf){
             playerControl = player.GetComponent<PlayerController>();
-            oldZPosition = new float[webCamStreamIn.instance.frameMemoryNumber];
-            oldPressionValue = new float[webCamStreamIn.instance.frameMemoryNumber];
+
+            oldZPosition = new float[webCamStreamIn.instance.smoothStrengh + 1][];
+            oldZPosition[0] = new float[webCamStreamIn.instance.frameMemoryNumber];
+            oldPressionValue = new float[webCamStreamIn.instance.smoothStrengh + 1][];
+            oldPressionValue[0] = new float[webCamStreamIn.instance.frameMemoryNumber];
+            //for each strengh, add a array
+            for (int i = 1; i <= webCamStreamIn.instance.smoothStrengh; i++){
+                oldZPosition[i] = new float[webCamStreamIn.instance.frameMemoryNumber];
+                oldPressionValue[i] = new float[webCamStreamIn.instance.frameMemoryNumber];
+            }
+
+
             resetData();
-            setOldFrameData(currentPressionValue, oldPressionValue);
-            setOldFrameData(currentZPosition, oldZPosition);
+            setOldFrameData(currentPressionValue, oldPressionValue[0]);
+            setOldFrameData(currentZPosition, oldZPosition[0]);
         }
         else{
             gameObject.SetActive(false);
@@ -47,36 +57,61 @@ public class ButtonController : MonoBehaviour {
             init();
             initialized = true;
         }
-        currentFramePercentage = webCamStreamIn.instance.currentFramePercentage;
-        //calculate the mouvement from by comparing with old frame's data
-        float averageXFromLastFrames = getAverage(oldPressionValue);
-        float xValue = currentPressionValue * currentFramePercentage + averageXFromLastFrames * (1-currentFramePercentage) - averageXFromLastFrames;
+        
+
+
+        alpha = webCamStreamIn.instance.currentFrameValuePercentage;
+
+        setOldFrameData(currentPressionValue, oldPressionValue[0]);
+        //Exponential moving average
+        float xCurrentMovingAverage = getMovingAverage(alpha, oldPressionValue[0]);
+
+        for (int i = 1; i < webCamStreamIn.instance.smoothStrengh; i++) {
+            //set current data
+            setOldFrameData(xCurrentMovingAverage, oldPressionValue[i]);
+            xCurrentMovingAverage = getMovingAverage(alpha, oldPressionValue[i]);
+        }
+
+        //head of array at 0
+        float xValue = xCurrentMovingAverage - oldPressionValue[webCamStreamIn.instance.smoothStrengh][0];
+        setOldFrameData(xCurrentMovingAverage, oldPressionValue[webCamStreamIn.instance.smoothStrengh]);
+
+
+        //to never divide by 0
         if (zPositionCount == 0) {
             zPositionCount = 1;
         }
-        float averageZFromLastFrames = getAverage(oldZPosition);
+        //current averge position of all pixel, the "center" of object
         currentZPosition = totalZPosition / zPositionCount;
-        float zValue = currentZPosition * currentFramePercentage + averageZFromLastFrames * (1 - currentFramePercentage) - averageZFromLastFrames;
+        //set current data
+        setOldFrameData(currentZPosition, oldZPosition[0]);
+        float zCurrentMovingAverage = getMovingAverage(alpha, oldZPosition[0]);
+        for (int i = 1; i < webCamStreamIn.instance.smoothStrengh; i++){
+            //set current data
+            setOldFrameData(zCurrentMovingAverage, oldZPosition[i]);
+            zCurrentMovingAverage = getMovingAverage(alpha, oldZPosition[i]);
+        }
+
+        float zValue = zCurrentMovingAverage - oldZPosition[webCamStreamIn.instance.smoothStrengh][0];
+        setOldFrameData(zCurrentMovingAverage, oldZPosition[webCamStreamIn.instance.smoothStrengh]);
+
 
         //give the calculated mouvement to the player
         playerControl.receiveTranslation(this,xValue, zValue);
         //set/reset data for next frame
-        setOldFrameData(currentPressionValue, oldPressionValue);
-        setOldFrameData(currentZPosition, oldZPosition);
+       
         resetData();
     }
 
-    private float getAverage(float[] values){
+    private float getMovingAverage(float alpha, float[] values){
         float result = 0;
-        float count = 0;
-        for (int i = 0; i < values.Length; i++) {
+        float pow = 0;
+        for (int i = 0; i < values.Length - 1; i++) {
             if (values[i] != 0) {
-                result += values[i];
-                count++;
+                float currentVariation = alpha * Mathf.Pow((1 - alpha), pow) * values[i];
+                result += currentVariation;
+                pow++;
             }
-        }
-        if (count != 0){
-            result /= count;
         }
         return result;
     }
@@ -92,7 +127,7 @@ public class ButtonController : MonoBehaviour {
     }
 
     /// <summary>
-    /// read this function's name
+    /// head at 0
     /// </summary>
     private void setOldFrameData(float currentValue, float[] oldValues) {
         for (int i = oldValues.Length-1; i > 0; i--) {

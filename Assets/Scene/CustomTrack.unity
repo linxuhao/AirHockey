@@ -330,15 +330,16 @@ MonoBehaviour:
   webcamResolutionHeight: 240
   gammaMultiplicator: 4
   imageProcessRate: 1
-  blurStrength: 1
+  blurStrength: 0
   xBegin: 0
   xEnd: 0
   zBegin: 0
   zEnd: 0
   VoxelOutputMode: 1
   voxel: {fileID: 1901194300046840, guid: 2ad528596cfb24e47b576634b892b829, type: 2}
-  currentFramePercentage: 0.5
-  frameMemoryNumber: 5
+  currentFrameValuePercentage: 0.3
+  frameMemoryNumber: 100
+  smoothStrengh: 2
 --- !u!23 &123086592
 MeshRenderer:
   m_ObjectHideFlags: 0
@@ -1781,7 +1782,7 @@ RectTransform:
   m_GameObject: {fileID: 1418466886}
   m_LocalRotation: {x: 0.7071068, y: -0, z: -0, w: 0.7071068}
   m_LocalPosition: {x: 0, y: -12.000002, z: -18.000002}
-  m_LocalScale: {x: 0.05997496, y: 0.05997496, z: 0.05997496}
+  m_LocalScale: {x: 0.09093606, y: 0.09093606, z: 0.09093606}
   m_Children:
   - {fileID: 1053059543}
   - {fileID: 1148637219}

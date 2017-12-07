@@ -98,13 +98,15 @@ public class webCamStreamIn : MonoBehaviour
     private float voxelY;
     //to put voxels under this game object folder
     private GameObject voxelFolder;
-    [Header("Player Control")]
+    [Header("Make Player Control Smooth")]
     [Tooltip("From 0 to 1")]
     //value needed by button controllers
-    public float currentFramePercentage;
+    public float currentFrameValuePercentage;
     [Tooltip("The number of frame to memorise data")]
     //value needed by button controllers
     public int frameMemoryNumber ;
+    [Tooltip("The number of smooth function applied on raw datas")]
+    public int smoothStrengh;
 
     // Use this for initialization
     void Start() {
@@ -182,7 +184,6 @@ public class webCamStreamIn : MonoBehaviour
     private void initializeGameZone()
     {
         GameObject murs = GameObject.FindGameObjectsWithTag("backgroundMurs")[0];
-
         for (int i = 0; i < murs.transform.childCount; i++)
         {
             Transform child = murs.transform.GetChild(i);
@@ -211,12 +212,14 @@ public class webCamStreamIn : MonoBehaviour
         //get the background camera
         cam = GameObject.FindGameObjectWithTag("backgroundCamera").GetComponent<Camera>();
         camTexture = cam.targetTexture;
+        if (camTexture) {
+            //create pixel array to save main camera (in game) frames
+            camHeight = camTexture.height;
+            camWidth = camTexture.width;
+            cam2d = new Texture2D(camWidth, camHeight, TextureFormat.RGBA32, true);
+            camFrame = new Color[camHeight * camWidth];
+        }
 
-        //create pixel array to save main camera (in game) frames
-        camHeight = camTexture.height;
-        camWidth = camTexture.width;
-        cam2d = new Texture2D(camWidth, camHeight, TextureFormat.RGBA32, true);
-        camFrame = new Color[camHeight * camWidth];
     }
 
     private void initializeWebcam()
@@ -256,22 +259,18 @@ public class webCamStreamIn : MonoBehaviour
         //if in game main background camera does exist and be active
         if (cam != null && cam.isActiveAndEnabled)
         {
-            //if user presses G, then get backgroundColors
-            if (Input.GetKeyDown(KeyCode.G)) {
-                backgroundColors = getBackgroundColors();
-                Debug.Log("There are " + backgroundColors.Count + " background colors recorded");
-            }
             //get webcam pixel array
             webcamFrame = getWebcamPixels();
             for (int i = 0; i < blurStrength; i++) {
                 webcamFrame = blur(webcamFrame);
             }
+            /*
             //get in game background camera pixel array
             RenderTexture.active = camTexture;
             cam2d.ReadPixels(new Rect(0, 0, camWidth, camHeight), 0, 0);
             cam2d.Apply();
             camFrame = cam2d.GetPixels();
-
+            */
             if (imageProcessCycle >= imageProcessRate)
             {
                 imageProcessCycle = 1;
@@ -281,7 +280,7 @@ public class webCamStreamIn : MonoBehaviour
                 for (int i = 0; i < webcamFrame.Length; i++)
                 {
                     //if is not a background and is a border
-                    if (!isBackground(webcamFrame[i]) && isBorder(webcamFrame, usableWebCamWidth, i))
+                    if (isBorder(webcamFrame, usableWebCamWidth, i))
                     {
                         if (hasBorderAround(tempArray, usableWebCamWidth, i))
                         {
@@ -301,8 +300,8 @@ public class webCamStreamIn : MonoBehaviour
             {
                 imageProcessCycle++;
             }
-            cam2d.SetPixels(camFrame);
-            cam2d.Apply();
+           /*cam2d.SetPixels(camFrame);
+            cam2d.Apply();*/
             processedWebcamView.SetPixels(webcamFrame);
             processedWebcamView.Apply();
 
@@ -313,10 +312,6 @@ public class webCamStreamIn : MonoBehaviour
         {
             Debug.LogError("there is no active main  background camera in game, check if your camera is tagged as backgroundCamera");
         }
-    }
-
-    private bool isBackground(Color color){
-        return backgroundColors.Contains(color);
     }
 
     private void disableUnusedVoxels(int voxelPointer){
@@ -384,29 +379,19 @@ public class webCamStreamIn : MonoBehaviour
         int xFrom = webCamWidth * leftOffset / 100;
         int yFrom = webCamHeight * topOffset / 100;
         frames = webcam.GetPixels(xFrom, yFrom, usableWebCamWidth, usableWebCamHeight);
+        //apply gamma correction on each pixels
+        for(int i=0; i< frames.Length; i++) {
+            for (int j = 0; j < gammaMultiplicator; j++){
+                frames[i] = frames[i].gamma;
+            }
+        }
         return frames;
     }
-
-    private HashSet<Color> getBackgroundColors(){
-        HashSet<Color> result = new HashSet<Color>();
-        //process background from camera
-        for (int i = 0; i < webcamFrame.Length; i++)
-        {
-            //add operation success only if element not already exist in set
-            result.Add(webcamFrame[i]);
-        }
-        return result;
-    }
-
 
     //test if color 1 has big grayscale with color2
     private bool hasBigGrayscaleDifference(Color color1, Color color2, float tolerence){
         Color gamma1 = color1;
         Color gamma2 = color2;
-        for (int i=0; i< gammaMultiplicator; i++) {
-            gamma1 = gamma1.gamma;
-            gamma2 = gamma2.gamma;
-        }
         float grayscale1 = gamma1.grayscale;
         float grayscale2 = gamma2.grayscale;
         float result = Mathf.Abs(grayscale1 - grayscale2);
