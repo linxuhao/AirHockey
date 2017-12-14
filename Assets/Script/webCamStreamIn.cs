@@ -113,6 +113,15 @@ public class webCamStreamIn : MonoBehaviour
         if (instance == null) {
             instance = this;
         }
+        else {
+            GameObject[] players = GameObject.FindGameObjectsWithTag("Player");
+            foreach (GameObject player in players){
+                if (!player.activeSelf)
+                {
+                    player.SetActive(true);
+                }
+            }
+        }
 
         if (imageProcessRate <= 0)
         {
@@ -165,9 +174,7 @@ public class webCamStreamIn : MonoBehaviour
         voxelY = 0;
         invisibleVoxel = new GameObject("invisibleVoxel");
         BoxCollider invisibleBox = invisibleVoxel.AddComponent<BoxCollider>() as BoxCollider;
-        invisibleBox.isTrigger = true;
         invisibleVoxel.transform.localScale = voxel.transform.localScale;
-        VoxelControllers control = invisibleVoxel.AddComponent<VoxelControllers>() as VoxelControllers;
 
         if (VoxelOutputMode == outputMode.debug)
         {
@@ -238,6 +245,7 @@ public class webCamStreamIn : MonoBehaviour
         webcam = new WebCamTexture(webCamName);
         webcam.requestedHeight = webcamResolutionWidth;
         webcam.requestedWidth = webcamResolutionWidth;
+        webcam.requestedFPS = 19;
         webcam.Play();
 
         //create pixel array to save webcam (real world) frames

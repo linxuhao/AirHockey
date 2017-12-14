@@ -5,15 +5,17 @@ using UnityEngine.UI;
 
 public class ScoreController : MonoBehaviour {
 
-	private Vector3 position = new Vector3(0,0.15f,-18);
+	private Vector3 position = new Vector3(0,0.4f,-18);
 	public GameObject table;
 	public Rigidbody sphere;
 	private int[] score;
 	public Text score1;
 	public Text score2;
+    private AudioSource victory;
 
 	// Use this for initialization
 	void Start () {
+        victory = GetComponent<AudioSource>();
 		score = new int[]{0,0};
 		score1.text = score[0].ToString();
 		score2.text = score[1].ToString();
@@ -27,6 +29,7 @@ public class ScoreController : MonoBehaviour {
 	void OnCollisionEnter(Collision col){
 		string colliderTag = col.collider.gameObject.tag;
 		if (colliderTag.Equals ("ball")) {
+            victory.Play();
 			//Debug.Log ("Collision avec " + col.gameObject.tag);
 			Destroy (col.gameObject);
 			//(0 0.15 0)

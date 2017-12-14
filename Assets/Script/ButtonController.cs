@@ -57,50 +57,50 @@ public class ButtonController : MonoBehaviour {
             init();
             initialized = true;
         }
-        
+
+        if (isActiveAndEnabled) {
+            alpha = webCamStreamIn.instance.currentFrameValuePercentage;
+
+            setOldFrameData(currentPressionValue, oldPressionValue[0]);
+            //Exponential moving average
+            float xCurrentMovingAverage = getMovingAverage(alpha, oldPressionValue[0]);
+
+            for (int i = 1; i < webCamStreamIn.instance.smoothStrengh; i++){
+                //set current data
+                setOldFrameData(xCurrentMovingAverage, oldPressionValue[i]);
+                xCurrentMovingAverage = getMovingAverage(alpha, oldPressionValue[i]);
+            }
+
+            //head of array at 0
+            float xValue = xCurrentMovingAverage - oldPressionValue[webCamStreamIn.instance.smoothStrengh][0];
+            setOldFrameData(xCurrentMovingAverage, oldPressionValue[webCamStreamIn.instance.smoothStrengh]);
 
 
-        alpha = webCamStreamIn.instance.currentFrameValuePercentage;
-
-        setOldFrameData(currentPressionValue, oldPressionValue[0]);
-        //Exponential moving average
-        float xCurrentMovingAverage = getMovingAverage(alpha, oldPressionValue[0]);
-
-        for (int i = 1; i < webCamStreamIn.instance.smoothStrengh; i++) {
+            //to never divide by 0
+            if (zPositionCount == 0){
+                zPositionCount = 1;
+            }
+            //current averge position of all pixel, the "center" of object
+            currentZPosition = totalZPosition / zPositionCount;
             //set current data
-            setOldFrameData(xCurrentMovingAverage, oldPressionValue[i]);
-            xCurrentMovingAverage = getMovingAverage(alpha, oldPressionValue[i]);
+            setOldFrameData(currentZPosition, oldZPosition[0]);
+            float zCurrentMovingAverage = getMovingAverage(alpha, oldZPosition[0]);
+            for (int i = 1; i < webCamStreamIn.instance.smoothStrengh; i++){
+                //set current data
+                setOldFrameData(zCurrentMovingAverage, oldZPosition[i]);
+                zCurrentMovingAverage = getMovingAverage(alpha, oldZPosition[i]);
+            }
+
+            float zValue = zCurrentMovingAverage - oldZPosition[webCamStreamIn.instance.smoothStrengh][0];
+            setOldFrameData(zCurrentMovingAverage, oldZPosition[webCamStreamIn.instance.smoothStrengh]);
+
+
+            //give the calculated mouvement to the player
+            playerControl.receiveTranslation(this, xValue, zValue);
+            //set/reset data for next frame
+
+            resetData();
         }
-
-        //head of array at 0
-        float xValue = xCurrentMovingAverage - oldPressionValue[webCamStreamIn.instance.smoothStrengh][0];
-        setOldFrameData(xCurrentMovingAverage, oldPressionValue[webCamStreamIn.instance.smoothStrengh]);
-
-
-        //to never divide by 0
-        if (zPositionCount == 0) {
-            zPositionCount = 1;
-        }
-        //current averge position of all pixel, the "center" of object
-        currentZPosition = totalZPosition / zPositionCount;
-        //set current data
-        setOldFrameData(currentZPosition, oldZPosition[0]);
-        float zCurrentMovingAverage = getMovingAverage(alpha, oldZPosition[0]);
-        for (int i = 1; i < webCamStreamIn.instance.smoothStrengh; i++){
-            //set current data
-            setOldFrameData(zCurrentMovingAverage, oldZPosition[i]);
-            zCurrentMovingAverage = getMovingAverage(alpha, oldZPosition[i]);
-        }
-
-        float zValue = zCurrentMovingAverage - oldZPosition[webCamStreamIn.instance.smoothStrengh][0];
-        setOldFrameData(zCurrentMovingAverage, oldZPosition[webCamStreamIn.instance.smoothStrengh]);
-
-
-        //give the calculated mouvement to the player
-        playerControl.receiveTranslation(this,xValue, zValue);
-        //set/reset data for next frame
-       
-        resetData();
     }
 
     private float getMovingAverage(float alpha, float[] values){

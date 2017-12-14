@@ -23,6 +23,7 @@ TagManager:
   - ball
   - voxel
   - AI
+  - tableFond
   layers:
   - Default
   - TransparentFX
