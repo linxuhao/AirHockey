@@ -113,15 +113,6 @@ public class webCamStreamIn : MonoBehaviour
         if (instance == null) {
             instance = this;
         }
-        else {
-            GameObject[] players = GameObject.FindGameObjectsWithTag("Player");
-            foreach (GameObject player in players){
-                if (!player.activeSelf)
-                {
-                    player.SetActive(true);
-                }
-            }
-        }
 
         if (imageProcessRate <= 0)
         {
@@ -174,6 +165,8 @@ public class webCamStreamIn : MonoBehaviour
         voxelY = 0;
         invisibleVoxel = new GameObject("invisibleVoxel");
         BoxCollider invisibleBox = invisibleVoxel.AddComponent<BoxCollider>() as BoxCollider;
+        Rigidbody rb = invisibleVoxel.AddComponent<Rigidbody>() as Rigidbody;
+        invisibleVoxel.tag = voxel.tag;
         invisibleVoxel.transform.localScale = voxel.transform.localScale;
 
         if (VoxelOutputMode == outputMode.debug)
@@ -308,7 +301,7 @@ public class webCamStreamIn : MonoBehaviour
             {
                 imageProcessCycle++;
             }
-           /*cam2d.SetPixels(camFrame);
+            /*cam2d.SetPixels(camFrame);
             cam2d.Apply();*/
             processedWebcamView.SetPixels(webcamFrame);
             processedWebcamView.Apply();
@@ -320,6 +313,7 @@ public class webCamStreamIn : MonoBehaviour
         {
             Debug.LogError("there is no active main  background camera in game, check if your camera is tagged as backgroundCamera");
         }
+        
     }
 
     private void disableUnusedVoxels(int voxelPointer){
