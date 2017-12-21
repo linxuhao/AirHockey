@@ -19,6 +19,7 @@ public class ScoreController : MonoBehaviour {
     public GameObject startButton;
     private TouchableButtonController startButtonController;
     public bool isGameStarted;
+    public GameObject ball;
 
 	// Use this for initialization
 	void Start () {
@@ -31,6 +32,7 @@ public class ScoreController : MonoBehaviour {
         score1.text = score[0].ToString();
         score2.text = score[1].ToString();
         isGameStarted = false;
+        ball = null;
     }
 	
 	// Update is called once per frame
@@ -50,6 +52,9 @@ public class ScoreController : MonoBehaviour {
             isGameStarted = false;
             startButtonController.active();
         }
+        if (ball == null && !startButtonController.isActive()) {
+            StartCoroutine(instanciateNewBall());
+        }
 	}
 
     private int getWinner(){
@@ -67,9 +72,11 @@ public class ScoreController : MonoBehaviour {
 
     public IEnumerator instanciateNewBall(){
         yield return new WaitForSeconds(0.8f);
-        if (isGameStarted) {
+        if (isGameStarted && !ball)
+        {
             Rigidbody newball = Instantiate(sphere, position, Quaternion.identity);
             newball.gameObject.transform.parent = table.transform;
+            ball = newball.gameObject;
         }
     }
 

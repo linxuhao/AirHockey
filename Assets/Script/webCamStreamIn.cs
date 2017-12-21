@@ -108,12 +108,18 @@ public class webCamStreamIn : MonoBehaviour
     [Tooltip("The number of smooth function applied on raw datas")]
     public int smoothStrengh;
 
+    public bool gameCalibrated = false;
+    private bool initialized = false;
+
     // Use this for initialization
-    void Start() {
-        if (instance == null) {
+    void Start(){
+        if (instance == null)
+        {
             instance = this;
         }
+    }
 
+    private void init(){
         if (imageProcessRate <= 0)
         {
             Debug.LogError("Please specify imageProcessRate, it is Rate of frame per image process, lower is more accurate but cost in performance.");
@@ -236,9 +242,8 @@ public class webCamStreamIn : MonoBehaviour
 
         //initialize the last found webcam(i got only one so) and play
         webcam = new WebCamTexture(webCamName);
-        webcam.requestedHeight = webcamResolutionWidth;
+        webcam.requestedHeight = webcamResolutionHeight;
         webcam.requestedWidth = webcamResolutionWidth;
-        webcam.requestedFPS = 19;
         webcam.Play();
 
         //create pixel array to save webcam (real world) frames
@@ -255,65 +260,71 @@ public class webCamStreamIn : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        //reset voxel pointer
-        voxelPointer = 0;
-        //if in game main background camera does exist and be active
-        if (cam != null && cam.isActiveAndEnabled)
-        {
-            //get webcam pixel array
-            webcamFrame = getWebcamPixels();
-            for (int i = 0; i < blurStrength; i++) {
-                webcamFrame = blur(webcamFrame);
-            }
-            /*
-            //get in game background camera pixel array
-            RenderTexture.active = camTexture;
-            cam2d.ReadPixels(new Rect(0, 0, camWidth, camHeight), 0, 0);
-            cam2d.Apply();
-            camFrame = cam2d.GetPixels();
-            */
-            if (imageProcessCycle >= imageProcessRate)
+        if (gameCalibrated && !initialized) {
+            init();
+            initialized = true;
+        }
+        if (gameCalibrated && initialized) {
+            //reset voxel pointer
+            voxelPointer = 0;
+            //if in game main background camera does exist and be active
+            if (cam != null && cam.isActiveAndEnabled)
             {
-                imageProcessCycle = 1;
-                //process on webcam frame
-                //create a empty temp array
-                Color[] tempArray = new Color[usableWebCamWidth * usableWebCamHeight];
-                for (int i = 0; i < webcamFrame.Length; i++)
+                //get webcam pixel array
+                webcamFrame = getWebcamPixels();
+                for (int i = 0; i < blurStrength; i++)
                 {
-                    //if is not a background and is a border
-                    if (isBorder(webcamFrame, usableWebCamWidth, i))
+                    webcamFrame = blur(webcamFrame);
+                }
+                /*
+                //get in game background camera pixel array
+                RenderTexture.active = camTexture;
+                cam2d.ReadPixels(new Rect(0, 0, camWidth, camHeight), 0, 0);
+                cam2d.Apply();
+                camFrame = cam2d.GetPixels();
+                */
+                if (imageProcessCycle >= imageProcessRate)
+                {
+                    imageProcessCycle = 1;
+                    //process on webcam frame
+                    //create a empty temp array
+                    Color[] tempArray = new Color[usableWebCamWidth * usableWebCamHeight];
+                    for (int i = 0; i < webcamFrame.Length; i++)
                     {
-                        if (hasBorderAround(tempArray, usableWebCamWidth, i))
+                        //if is not a background and is a border
+                        if (isBorder(webcamFrame, usableWebCamWidth, i))
                         {
-                            //mark this pixel to red in display array
-                            webcamFrame[i] = colorTrackingMark;
-                            fireVoxel(usableWebCamWidth, usableWebCamHeight, i);
-                        }
-                        else
-                        {
-                            //mark this pixel to red in temp array, potential border and noise pixel
-                            tempArray[i] = colorTrackingMark;
+                            if (hasBorderAround(tempArray, usableWebCamWidth, i))
+                            {
+                                //mark this pixel to red in display array
+                                webcamFrame[i] = colorTrackingMark;
+                                fireVoxel(usableWebCamWidth, usableWebCamHeight, i);
+                            }
+                            else
+                            {
+                                //mark this pixel to red in temp array, potential border and noise pixel
+                                tempArray[i] = colorTrackingMark;
+                            }
                         }
                     }
                 }
+                else
+                {
+                    imageProcessCycle++;
+                }
+                /*cam2d.SetPixels(camFrame);
+                cam2d.Apply();*/
+                processedWebcamView.SetPixels(webcamFrame);
+                processedWebcamView.Apply();
+
+                //Debug.Log("The number of voxel needed is : " + voxelPointer);
+                disableUnusedVoxels(voxelPointer);
             }
             else
             {
-                imageProcessCycle++;
+                Debug.LogError("there is no active main  background camera in game, check if your camera is tagged as backgroundCamera");
             }
-            /*cam2d.SetPixels(camFrame);
-            cam2d.Apply();*/
-            processedWebcamView.SetPixels(webcamFrame);
-            processedWebcamView.Apply();
-
-            //Debug.Log("The number of voxel needed is : " + voxelPointer);
-            disableUnusedVoxels(voxelPointer);
-        }
-        else
-        {
-            Debug.LogError("there is no active main  background camera in game, check if your camera is tagged as backgroundCamera");
-        }
-        
+        }      
     }
 
     private void disableUnusedVoxels(int voxelPointer){

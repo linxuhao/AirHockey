@@ -19,13 +19,8 @@ public class HoleController : MonoBehaviour {
         if (colliderTag.Equals("ball"))
         {
             ScoreController.instance.playVictory();
-            //Debug.Log ("Collision avec " + col.gameObject.tag);
+            ScoreController.instance.ball = null;
             Destroy(col.gameObject);
-            //(0 0.15 0)
-            //Debug.Log ("Instantiate new ball");
-            StartCoroutine(ScoreController.instance.instanciateNewBall());
-            //newball.transform.localScale = new Vector3(0.125f, 0.05f, 0.5f);
-            //Debug.Log (newball.position);
             if (this.gameObject.name == "Hole1")
             {
                 ScoreController.instance.addScorePlayer1();

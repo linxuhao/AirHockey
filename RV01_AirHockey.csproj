@@ -13,13 +13,11 @@
     <TargetFrameworkIdentifier>.NETFramework</TargetFrameworkIdentifier>
     <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
     <TargetFrameworkProfile>Unity Subset v3.5</TargetFrameworkProfile>
-    <CompilerResponseFile>
-    </CompilerResponseFile>
+    <CompilerResponseFile></CompilerResponseFile>
     <UnityProjectType>Game:1</UnityProjectType>
     <UnityBuildTarget>StandaloneWindows:5</UnityBuildTarget>
     <UnityVersion>2017.2.0f3</UnityVersion>
-    <RootNamespace>
-    </RootNamespace>
+    <RootNamespace></RootNamespace>
     <LangVersion>4</LangVersion>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
@@ -221,40 +219,17 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Assets\ColorTracker\Demos\Scripts\ColorSegmentation.cs" />
-    <Compile Include="Assets\ColorTracker\Demos\Scripts\FruitGameController.cs" />
-    <Compile Include="Assets\ColorTracker\Demos\Scripts\FruitTrailRenderer.cs" />
-    <Compile Include="Assets\ColorTracker\Demos\Scripts\GyroController.cs" />
-    <Compile Include="Assets\ColorTracker\Demos\Scripts\MouseController.cs" />
-    <Compile Include="Assets\ColorTracker\Demos\Scripts\SplitableFruit.cs" />
-    <Compile Include="Assets\ColorTracker\Demos\Scripts\TouchableItem.cs" />
-    <Compile Include="Assets\ColorTracker\Demos\Scripts\WorldTestDemo.cs" />
-    <Compile Include="Assets\ColorTracker\Scripts\Core\ColorTracker.cs" />
-    <Compile Include="Assets\ColorTracker\Scripts\Core\CoordinateMapper.cs" />
-    <Compile Include="Assets\ColorTracker\Scripts\Core\InputSource.cs" />
-    <Compile Include="Assets\ColorTracker\Scripts\Core\KalmanFilter.cs" />
-    <Compile Include="Assets\ColorTracker\Scripts\Core\ParticleFilter.cs" />
-    <Compile Include="Assets\ColorTracker\Scripts\Integration\AugmentedRealityRenderer.cs" />
-    <Compile Include="Assets\ColorTracker\Scripts\Integration\CameraInput.cs" />
-    <Compile Include="Assets\ColorTracker\Scripts\Integration\ColorTrackerPanel.cs" />
-    <Compile Include="Assets\ColorTracker\Scripts\Integration\ColorTrackerRenderer.cs" />
-    <Compile Include="Assets\ColorTracker\Scripts\Integration\InteractiveItem.cs" />
-    <Compile Include="Assets\ColorTracker\Scripts\Integration\ScreenInput.cs" />
-    <Compile Include="Assets\ColorTracker\Scripts\Integration\TouchlessInputModule.cs" />
-    <Compile Include="Assets\ColorTracker\Scripts\Integration\VideoCaptureRenderer.cs" />
-    <Compile Include="Assets\Script\AIController.cs" />
     <Compile Include="Assets\Script\BalleController.cs" />
-    <Compile Include="Assets\Script\ButtonController.cs" />
+    <Compile Include="Assets\Script\CalibrationController.cs" />
     <Compile Include="Assets\Script\HoleController.cs" />
-    <Compile Include="Assets\Script\NavMeshAiController.cs" />
-    <Compile Include="Assets\Script\PlayerController.cs" />
     <Compile Include="Assets\Script\ScoreController.cs" />
     <Compile Include="Assets\Script\TouchableButtonController.cs" />
-    <Compile Include="Assets\Script\VoxelControllers.cs" />
+    <Compile Include="Assets\Script\Unused\AIController.cs" />
+    <Compile Include="Assets\Script\Unused\ButtonController.cs" />
+    <Compile Include="Assets\Script\Unused\NavMeshAiController.cs" />
+    <Compile Include="Assets\Script\Unused\PlayerController.cs" />
+    <Compile Include="Assets\Script\Unused\VoxelControllers.cs" />
     <Compile Include="Assets\Script\webCamStreamIn.cs" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="Assets\Plugins\Android\AndroidManifest.xml" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Target Name="GenerateTargetFrameworkMonikerAttribute" />

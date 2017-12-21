@@ -33,6 +33,10 @@ public class TouchableButtonController : MonoBehaviour {
         touched = false;
     }
 
+    public bool isActive() {
+        return gameObject.activeSelf;
+    }
+
     void OnTriggerEnter(Collider other){
         if (other.CompareTag("voxel")){
             touched = true;

@@ -194,7 +194,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   pushTheBallOnStart: 0
-  speed: 10
+  speed: 12.5
   direction: {x: 0, y: 0, z: 0}
   chocSound: {fileID: 8300000, guid: 57e543a4543a06d4a91c77a8baa24172, type: 3}
   refresh: {fileID: 8300000, guid: 722d0c7acbb9bde468457f4fc102e524, type: 3}
