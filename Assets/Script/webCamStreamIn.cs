@@ -119,7 +119,7 @@ public class webCamStreamIn : MonoBehaviour
         }
     }
 
-    private void init(){
+    private bool init(){
         if (imageProcessRate <= 0)
         {
             Debug.LogError("Please specify imageProcessRate, it is Rate of frame per image process, lower is more accurate but cost in performance.");
@@ -142,7 +142,10 @@ public class webCamStreamIn : MonoBehaviour
 
         rend = GetComponent<Renderer>();
 
-        initializeWebcam();
+        if (!initializeWebcam())
+        {
+            return false;
+        }
 
         webcamFrame = new Color[usableWebCamHeight * usableWebCamWidth];
 
@@ -186,6 +189,7 @@ public class webCamStreamIn : MonoBehaviour
         }
         voxelFolder = new GameObject("VoxelObjects");
         voxelFolder.transform.parent = transform;
+        return true;
     }
 
     private void initializeGameZone()
@@ -229,41 +233,53 @@ public class webCamStreamIn : MonoBehaviour
 
     }
 
-    private void initializeWebcam()
+    private bool initializeWebcam()
     {
-        string webCamName = null;
-
-        //find webcams
-        WebCamDevice[] devices = WebCamTexture.devices;
-        for (var i = 0; i < devices.Length; i++)
+        if (!webcam)
         {
-            //Debug.Log("webcam found : " + devices[i].name);
-            webCamName = devices[i].name;
-        }
+            string webCamName = null;
 
-        //initialize the last found webcam(i got only one so) and play
-        webcam = new WebCamTexture(webCamName);
-        webcam.requestedHeight = webcamResolutionHeight;
-        webcam.requestedWidth = webcamResolutionWidth;
-        webcam.Play();
+            //find webcams
+            WebCamDevice[] devices = WebCamTexture.devices;
+            for (var i = 0; i < devices.Length; i++)
+            {
+                Debug.Log("webcam found : " + devices[i].name);
+                webCamName = devices[i].name;
+            }
+
+            //initialize the last found webcam(i got only one so) and play
+            webcam = new WebCamTexture(webCamName);
+            webcam.requestedHeight = webcamResolutionHeight;
+            webcam.requestedWidth = webcamResolutionWidth;
+            webcam.filterMode = FilterMode.Trilinear;
+            webcam.Play();
+        }
 
         //create pixel array to save webcam (real world) frames
         webCamHeight = webcam.height;
         webCamWidth = webcam.width;
 
+        if(webCamHeight < 100 && webCamWidth < 100)
+        {
+            //Web cam return small number such as 16 as height and width at the beginning
+            Debug.Log("webCamHeight: " + webCamHeight + ", webCamWidth: " + webCamWidth + "Waitting for webcam to be rdy");
+            return false;
+        }
+
+
         usableWebCamHeight = webCamHeight * (100 - topOffset - botOffset) / 100;
         usableWebCamWidth = webCamWidth * (100 - leftOffset - rightOffset) / 100;
 
-        Debug.Log("webcam width : " + webCamWidth + "usable webcam width : " + usableWebCamWidth);
-        Debug.Log("webcam height : " + webCamHeight + "usable webcam width : " + usableWebCamHeight);
+        Debug.Log("webcam width : " + webCamWidth + ", usable webcam width : " + usableWebCamWidth);
+        Debug.Log("webcam height : " + webCamHeight + ", usable webcam width : " + usableWebCamHeight);
+        return true;
     }
 
     // Update is called once per frame
     void Update()
     {
         if (gameCalibrated && !initialized) {
-            init();
-            initialized = true;
+            initialized = init(); ;
         }
         if (gameCalibrated && initialized) {
             //reset voxel pointer

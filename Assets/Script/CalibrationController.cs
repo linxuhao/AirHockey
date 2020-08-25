@@ -132,25 +132,33 @@ public class CalibrationController : MonoBehaviour {
         botoffsetSlider.value = botoffset;
     }
 
-    private void initializeWebcam(){
-        string webCamName = null;
-
-        //find webcams
-        WebCamDevice[] devices = WebCamTexture.devices;
-        for (var i = 0; i < devices.Length; i++)
+    private bool initializeWebcam(){
+        if(!webcam)
         {
-            //Debug.Log("webcam found : " + devices[i].name);
-            webCamName = devices[i].name;
+            string webCamName = null;
+            //find webcams
+            WebCamDevice[] devices = WebCamTexture.devices;
+            for (var i = 0; i < devices.Length; i++)
+            {
+                //Debug.Log("webcam found : " + devices[i].name);
+                webCamName = devices[i].name;
+            }
+            //initialize the last found webcam(i got only one so) and play
+            webcam = new WebCamTexture(webCamName);
+            webcam.requestedHeight = webCamStreamIn.instance.webcamResolutionHeight;
+            webcam.requestedWidth = webCamStreamIn.instance.webcamResolutionWidth;
+            webcam.Play();
         }
-
-        //initialize the last found webcam(i got only one so) and play
-        webcam = new WebCamTexture(webCamName);
-        webcam.requestedHeight = webCamStreamIn.instance.webcamResolutionHeight;
-        webcam.requestedWidth = webCamStreamIn.instance.webcamResolutionWidth;
-        webcam.Play();
 
         webCamHeight = webcam.height;
         webCamWidth = webcam.width;
+        if (webCamHeight < 100 && webCamWidth < 100)
+        {
+            //Web cam return small number such as 16 as height and width at the beginning
+            Debug.Log("webCamHeight: " + webCamHeight + ", webCamWidth: " + webCamWidth + "Waitting for webcam to be rdy");
+            return false;
+        }
+        return true;
     }
 
     private void finishCalibration(){
@@ -180,9 +188,8 @@ public class CalibrationController : MonoBehaviour {
 
     void Update(){
         if (!initialized){
-            initializeWebcam();
+            initialized = initializeWebcam();
             //initSliderValues();
-            initialized = true;
         }
         else {
             refreshOffset();
