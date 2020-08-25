@@ -170,8 +170,9 @@ public class webCamStreamIn : MonoBehaviour
         voxels = new List<GameObject>();
         voxelY = 0;
         invisibleVoxel = new GameObject("invisibleVoxel");
-        BoxCollider invisibleBox = invisibleVoxel.AddComponent<BoxCollider>() as BoxCollider;
-        Rigidbody rb = invisibleVoxel.AddComponent<Rigidbody>() as Rigidbody;
+        BoxCollider invisibleBox = invisibleVoxel.AddComponent<BoxCollider>();
+        Rigidbody rb = invisibleVoxel.AddComponent<Rigidbody>();
+        rb.useGravity = false;
         invisibleVoxel.tag = voxel.tag;
         invisibleVoxel.transform.localScale = voxel.transform.localScale;
 
