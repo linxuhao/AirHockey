@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
 public class CalibrationController : MonoBehaviour {
@@ -55,12 +56,9 @@ public class CalibrationController : MonoBehaviour {
         rightoffsetSlider.onValueChanged.AddListener(delegate { ValueRightChangeCheck(); });
         topoffsetSlider.onValueChanged.AddListener(delegate { ValueTopChangeCheck(); });
         botoffsetSlider.onValueChanged.AddListener(delegate { ValueBotChangeCheck(); });
-
-        Button btn = finishButton.GetComponent<Button>();
-        btn.onClick.AddListener(finishCalibration);
     }
 
-    private void ValueLeftChangeCheck()
+    public void ValueLeftChangeCheck()
     {
         int temp = (int)leftoffsetSlider.value;
         if (temp + rightoffset < 99)
@@ -74,7 +72,7 @@ public class CalibrationController : MonoBehaviour {
         
     }
 
-    private void ValueRightChangeCheck()
+    public void ValueRightChangeCheck()
     {
         int temp = (int)rightoffsetSlider.value;
         if (temp + leftoffset < 99)
@@ -88,7 +86,7 @@ public class CalibrationController : MonoBehaviour {
         }
     }
 
-    private void ValueTopChangeCheck()
+    public void ValueTopChangeCheck()
     {
         int temp = (int)topoffsetSlider.value;
         if (temp + botoffset < 99)
@@ -102,7 +100,7 @@ public class CalibrationController : MonoBehaviour {
         }
     }
 
-    private void ValueBotChangeCheck()
+    public void ValueBotChangeCheck()
     {
         int temp = (int)botoffsetSlider.value;
         if (temp + topoffset < 99)
@@ -161,7 +159,7 @@ public class CalibrationController : MonoBehaviour {
         return true;
     }
 
-    private void finishCalibration(){
+    public void finishCalibration(){
 
         webcam.Stop();
 
