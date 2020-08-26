@@ -437,6 +437,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   invertAxisXYFromCamera: 0
+  backCamera: 1
   leftOffset: 30
   rightOffset: 15
   topOffset: 30
@@ -453,6 +454,7 @@ MonoBehaviour:
   zBegin: 0
   zEnd: 0
   VoxelOutputMode: 0
+  pixelToVoxelRatio: 1
   voxel: {fileID: 1901194300046840, guid: 2ad528596cfb24e47b576634b892b829, type: 3}
   currentFrameValuePercentage: 0.3
   frameMemoryNumber: 10

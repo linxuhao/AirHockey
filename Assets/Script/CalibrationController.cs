@@ -58,7 +58,7 @@ public class CalibrationController : MonoBehaviour {
         botoffsetSlider.onValueChanged.AddListener(delegate { ValueBotChangeCheck(); });
     }
 
-    public void ValueLeftChangeCheck()
+    public  void ValueLeftChangeCheck()
     {
         int temp = (int)leftoffsetSlider.value;
         if (temp + rightoffset < 99)

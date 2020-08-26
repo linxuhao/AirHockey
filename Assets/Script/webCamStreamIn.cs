@@ -16,6 +16,8 @@ public class webCamStreamIn : MonoBehaviour
     [Header("Camera input options")]
     [Tooltip("Invert X and Y from webcam")]
     public bool invertAxisXYFromCamera;
+    [Tooltip("Is the camera at back or front")]
+    public bool backCamera;
     //to display content of webcam on a material
     private Renderer rend;
 
@@ -84,7 +86,8 @@ public class webCamStreamIn : MonoBehaviour
     [Header("Physic simulation")]
     [Tooltip("Select voxel visibility mode, debug is visible, game is invisible")]
     public outputMode VoxelOutputMode;
-
+    [Tooltip("Min value is 1, If = 2, means 2 edge pixels will produce one voxel")]
+    public int pixelToVoxelRatio;
     [Tooltip("Select a gameObject simulate voxel")]
     public GameObject voxel;
     //for game mode, created in script
@@ -284,6 +287,7 @@ public class webCamStreamIn : MonoBehaviour
         if (gameCalibrated && initialized) {
             //reset voxel pointer
             voxelPointer = 0;
+            int currentPixelToVoxel = 1;
             //if in game main background camera does exist and be active
             if (cam != null && cam.isActiveAndEnabled)
             {
@@ -315,7 +319,15 @@ public class webCamStreamIn : MonoBehaviour
                             {
                                 //mark this pixel to red in display array
                                 webcamFrame[i] = colorTrackingMark;
-                                fireVoxel(usableWebCamWidth, usableWebCamHeight, i);
+                                if(currentPixelToVoxel > pixelToVoxelRatio)
+                                {
+                                    currentPixelToVoxel = 1;
+                                    fireVoxel(usableWebCamWidth, usableWebCamHeight, i);
+                                }
+                                else
+                                {
+                                    currentPixelToVoxel++;
+                                }
                             }
                             else
                             {
@@ -352,7 +364,7 @@ public class webCamStreamIn : MonoBehaviour
 
     //place voxels from background camera to background(ball in background, foreground are the real objects)
     private void fireVoxel(int webCamWidth, int webCamHeight, int i){
-        //calculate each ray's position
+        //calculate each voxel's position
         //percentage
         int webcamScreenLigne = i / webCamWidth;
         float xWebcamScreenPercentage = (float)i % webCamWidth / webCamWidth;
@@ -370,6 +382,10 @@ public class webCamStreamIn : MonoBehaviour
         if (invertAxisXYFromCamera){
             x = yWebcamScreenPercentage;
             y = 1 - xWebcamScreenPercentage;
+        }
+        if (!backCamera)//if is front camera, invert xMin and xMax
+        {
+            x = 1 - xWebcamScreenPercentage;
         }
         Vector3 cameraPositionBegin = new Vector3(x, voxelY, y);
         Vector3 worldPosition = CameraPercentPositionToWorldPoint(cameraPositionBegin);
